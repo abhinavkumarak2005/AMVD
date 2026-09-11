@@ -1,0 +1,638 @@
+<!DOCTYPE html><html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Sri Manakula Vinayagar Devasthanam | Sacred Temple Shrine</title>
+<!-- Google Fonts: Playfair Display, Great Vibes, Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&amp;family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&amp;family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS v3 with Forms & Container-Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'temple-olive': '#3A4222',
+            'temple-dark-olive': '#2C3318',
+            'temple-green': '#4C5A26',
+            'temple-saffron': '#E8791A',
+            'temple-saffron-hover': '#D46910',
+            'temple-gold': '#C99A3E',
+            'temple-gold-light': '#F2DEC0',
+            'temple-ivory': '#FBF3E7',
+            'temple-cream': '#F5E8D6',
+            'temple-brown': '#2E2417',
+            'temple-tan': '#78644E',
+          },
+          fontFamily: {
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+            script: ['"Great Vibes"', 'cursive'],
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          boxShadow: {
+            'sacred': '0 12px 36px -8px rgba(76, 90, 38, 0.16), 0 4px 12px rgba(201, 154, 62, 0.12)',
+            'glowing-orange': '0 8px 24px -4px rgba(232, 121, 26, 0.45)',
+            'glowing-green': '0 8px 24px -4px rgba(76, 90, 38, 0.4)',
+            'card-lift': '0 18px 40px -10px rgba(46, 36, 23, 0.18)',
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-decorations">
+    /* Subtle filigree borders and sacred backgrounds */
+    .bg-temple-pattern {
+      background-color: #FBF3E7;
+      background-image: radial-gradient(#C99A3E 0.65px, transparent 0.65px), radial-gradient(#C99A3E 0.65px, #FBF3E7 0.65px);
+      background-size: 26px 26px;
+      background-position: 0 0, 13px 13px;
+      background-opacity: 0.15;
+    }
+
+    .filigree-border {
+      border: 2px solid #D6B883;
+      position: relative;
+    }
+    .filigree-border::before {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border: 1px solid rgba(201, 154, 62, 0.4);
+      pointer-events: none;
+      border-radius: inherit;
+    }
+
+    .ornament-divider {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .ornament-divider::before, .ornament-divider::after {
+      content: '❖';
+      font-size: 11px;
+      color: #C99A3E;
+    }
+
+    .mandala-glow {
+      background: radial-gradient(circle, rgba(232, 121, 26, 0.15) 0%, rgba(201, 154, 62, 0.08) 50%, transparent 75%);
+    }
+
+    /* Smooth interactive scaling */
+    .btn-bounce {
+      transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-bounce:hover {
+      transform: translateY(-2px);
+    }
+    .btn-bounce:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+<body class="bg-temple-ivory text-temple-brown font-sans antialiased selection:bg-temple-saffron selection:text-white">
+<!-- BEGIN: UtilityTopBar -->
+<aside class="bg-temple-olive text-white/90 text-xs py-2 px-4 sm:px-8 border-b border-[#4F5B2F] relative z-40" data-purpose="utility-header">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-2">
+<!-- Contact Details -->
+<div class="flex flex-wrap items-center justify-center md:justify-start gap-4 sm:gap-6 font-medium tracking-wide">
+<a class="flex items-center gap-1.5 hover:text-temple-gold transition-colors" href="tel:+911234567890">
+<span class="text-temple-gold text-sm">📞</span> +91 12345 67890
+        </a>
+<a class="flex items-center gap-1.5 hover:text-temple-gold transition-colors" href="mailto:info@manakulavinayagartemple.org">
+<span class="text-temple-gold text-sm">✉️</span> info@manakulavinayagartemple.org
+        </a>
+<span class="hidden lg:flex items-center gap-1.5 text-white/80">
+<span class="text-temple-gold text-sm">📍</span> 123 Temple Street, Puducherry, India
+        </span>
+</div>
+<!-- Quick Links & Social Media -->
+<div class="flex items-center gap-4 sm:gap-6">
+<div class="hidden sm:flex items-center gap-3 text-white/80 font-normal">
+<a class="hover:text-temple-gold transition" href="#timings">Timings</a>
+<span class="text-white/30">|</span>
+<a class="hover:text-temple-gold transition" href="#events">Events</a>
+<span class="text-white/30">|</span>
+<a class="hover:text-temple-gold transition" href="#gallery">Gallery</a>
+<span class="text-white/30">|</span>
+<a class="hover:text-temple-gold transition" href="#contact">Contact Us</a>
+</div>
+<div class="flex items-center gap-2 pl-2 border-l border-white/20">
+<a aria-label="Facebook" class="w-6 h-6 rounded-full bg-black/20 flex items-center justify-center text-temple-gold hover:bg-temple-saffron hover:text-white transition-all text-xs font-bold" href="#facebook">f</a>
+<a aria-label="Instagram" class="w-6 h-6 rounded-full bg-black/20 flex items-center justify-center text-temple-gold hover:bg-temple-saffron hover:text-white transition-all text-xs" href="#instagram">📷</a>
+<a aria-label="YouTube" class="w-6 h-6 rounded-full bg-black/20 flex items-center justify-center text-temple-gold hover:bg-temple-saffron hover:text-white transition-all text-xs" href="#youtube">▶</a>
+</div>
+</div>
+</div>
+</aside>
+<!-- END: UtilityTopBar -->
+<!-- BEGIN: MainHeader -->
+<header class="sticky top-0 z-30 bg-[#FDF8F0]/95 backdrop-blur-md border-b border-temple-gold/30 shadow-sm transition-all duration-300" data-purpose="primary-navigation">
+<div class="max-w-7xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between">
+<!-- Brand Logo / Gopuram Icon -->
+<a class="flex items-center gap-3 group focus:outline-none" href="#">
+<div class="w-12 h-12 rounded-lg bg-temple-cream border border-temple-gold/60 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
+<!-- Golden Temple Gopuram SVG -->
+<svg class="w-8 h-8 text-temple-gold" fill="currentColor" viewBox="0 0 24 24">
+<path d="M12 2L9 5V8H7L6 11V14H4L3 18H21L20 14H18V11L17 8H15V5L12 2ZM11 6.5L12 5.5L13 6.5V8H11V6.5ZM9 9.5H15V11H9V9.5ZM8 12.5H16V14H8V12.5ZM5.5 15.5H18.5L19 17.5H5L5.5 15.5ZM11 19H13V22H11V19Z"></path>
+</svg>
+</div>
+<div class="flex flex-col">
+<span class="font-serif text-lg sm:text-xl font-bold tracking-tight text-temple-brown leading-tight group-hover:text-temple-saffron transition-colors">
+            Sri Manakula
+          </span>
+<span class="font-serif text-xs sm:text-sm font-semibold tracking-wider uppercase text-temple-gold">
+            Vinayagar Devasthanam
+          </span>
+</div>
+</a>
+<!-- Desktop Nav Menu -->
+<nav class="hidden xl:flex items-center space-x-6 text-[14px] font-medium text-temple-brown">
+<a class="relative text-temple-saffron font-semibold py-1" href="#">
+          Home
+          <span class="absolute -bottom-1 left-0 right-0 h-0.5 bg-temple-saffron rounded-full"></span>
+<span class="absolute -top-2 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-temple-saffron"></span>
+</a>
+<a class="hover:text-temple-saffron transition-colors py-1" href="#about">About Us</a>
+<a class="hover:text-temple-saffron transition-colors py-1" href="#history">History</a>
+<a class="hover:text-temple-saffron transition-colors py-1" href="#services">Services</a>
+<a class="hover:text-temple-saffron transition-colors py-1" href="#pooja-booking">Pooja Booking</a>
+<a class="hover:text-temple-saffron transition-colors py-1" href="#donations">Donations</a>
+<a class="hover:text-temple-saffron transition-colors py-1" href="#gallery">Gallery</a>
+<a class="hover:text-temple-saffron transition-colors py-1" href="#blog">Blog</a>
+<a class="hover:text-temple-saffron transition-colors py-1" href="#contact">Contact Us</a>
+</nav>
+<!-- CTA Donate Button -->
+<div class="flex items-center gap-3">
+<a class="btn-bounce inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-temple-saffron text-white text-sm font-bold tracking-wide shadow-glowing-orange hover:bg-temple-saffron-hover transition-colors tactile-btn" href="#ehundi">
+<span class="">Donate Now</span>
+<span class="text-xs font-bold">♥</span>
+</a>
+</div>
+</div>
+</header>
+<!-- END: MainHeader -->
+<main>
+<!-- BEGIN: HeroHistorySection -->
+<section class="relative overflow-hidden py-14 lg:py-20 bg-gradient-to-b from-[#FDF8F0] via-[#FBF3E7] to-[#F5E8D6]" data-purpose="hero-history" id="history">
+<div class="max-w-7xl mx-auto px-4 sm:px-8">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+<!-- Left Column: Temple Narrative -->
+<div class="lg:col-span-6 xl:col-span-7 space-y-6">
+<!-- Eyebrow with flourishes -->
+<div class="flex items-center gap-3 text-temple-saffron font-script text-3xl sm:text-4xl">
+<span class="text-temple-gold text-lg">༻❁༺</span>
+<span class="">History of the Temple</span>
+<span class="text-temple-gold text-lg">༻❁༺</span>
+</div>
+<!-- Heading -->
+<h1 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-temple-brown leading-tight">
+              Sri Manakula <br class="hidden sm:inline">Vinayagar Devasthanam
+            </h1>
+<!-- Description -->
+<p class="text-temple-tan text-base sm:text-lg leading-relaxed text-justify">
+              The temple is deeply steeped in over 500 years of glorious lore and divine intervention. Located in the French Quarter of Puducherry facing the Bay of Bengal, the presiding deity, Lord Bhuvaneswara Ganesha, has showered limitless benevolence upon countless seekers. Even during historical trials when efforts were made to relocate the sacred stone, the idol miraculously reappeared at this holy pond site, affirming the immortal presence of the Lord.
+            </p>
+<p class="text-temple-tan text-sm sm:text-base leading-relaxed">
+              Devotees from every corner of the world gather here to offer their prayers before commencing any new endeavor, seeking blessings for prosperity, clarity of soul, and total liberation from worldly obstacles.
+            </p>
+<!-- CTA Read More -->
+<div class="pt-2">
+<a class="btn-bounce inline-flex items-center gap-3 px-8 py-3 rounded-full bg-temple-saffron text-white font-semibold text-sm tracking-wider shadow-glowing-orange hover:bg-temple-saffron-hover tactile-btn" href="#about">
+<span class="">Read More</span>
+<span class="text-xs">➜</span>
+</a>
+</div>
+</div>
+<!-- Right Column: Framed Deity Shrine -->
+<div class="lg:col-span-6 xl:col-span-5 flex justify-center relative">
+<div class="relative max-w-md w-full">
+<!-- Golden Prabhavali / Arch Frame -->
+<div class="relative rounded-3xl p-3 bg-gradient-to-b from-[#E7C78B] via-[#C99A3E] to-[#997127] shadow-sacred">
+<div class="relative rounded-2xl overflow-hidden bg-[#241A13] border-2 border-temple-gold/40">
+<img alt="Sri Manakula Vinayagar Devasthanam Sanctum Sanctorum" class="w-full h-auto object-cover transform hover:scale-102 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuATtTvuPZCub_6XR2dqSiIszz3bf8974uaUF4Xm6eYn9skM9J9aqMwLF5bZcwVZfA3qYeMTpjItEPAtGlP89EOKuWwWCvGwZ5WvUTgg1FhYTBu66pLctlen2HifY1IvJYnENRSYXeT_-caaRoX5SxU0vDVMGdXQYDfSO1vpMQcXKED5hWwM6Ri_K8rf3EeyPAjemRNT_wxQ7S43cbGRE0T2Fo83ptkR9Py0mYemkD_kHHrGnBHM2UEd">
+<!-- Subtle inner glow overlay -->
+<div class="absolute inset-0 pointer-events-none ring-1 ring-inset ring-amber-300/30"></div>
+</div>
+</div>
+<!-- Brass Diya Lamps Overlay effect -->
+<div class="absolute -bottom-5 left-4 bg-temple-cream/90 backdrop-blur border border-temple-gold/40 rounded-full px-4 py-1.5 shadow-md flex items-center gap-2">
+<span class="text-amber-500 animate-pulse text-sm">🪔</span>
+<span class="text-xs font-semibold tracking-wide text-temple-brown">Nithya Pooja Darshan</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: HeroHistorySection -->
+<!-- BEGIN: EHundiSpotlightPanel -->
+<section class="py-12 lg:py-16 px-4 sm:px-8" data-purpose="ehundi-spotlight" id="ehundi">
+<div class="max-w-7xl mx-auto">
+<!-- Large Rounded e-Hundi Spotlight Box -->
+<div class="relative rounded-[32px] bg-gradient-to-br from-[#FAF0E1] via-[#F4E3CB] to-[#EEDBBF] border-2 border-[#D4B680] shadow-card-lift p-6 sm:p-10 lg:p-12 overflow-hidden">
+<!-- Decorative Corner Kolam Watermark -->
+<div class="absolute -top-12 -left-12 w-48 h-48 rounded-full bg-temple-gold/10 blur-xl pointer-events-none"></div>
+<div class="absolute -bottom-12 -right-12 w-64 h-64 rounded-full bg-temple-saffron/10 blur-2xl pointer-events-none"></div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+<!-- Left 3.5 cols: Divine Ganesha Illustration / Deity Portrait -->
+<div class="lg:col-span-4 flex flex-col items-center justify-center">
+<div class="relative w-64 h-80 sm:w-72 sm:h-96 rounded-2xl overflow-hidden p-2 bg-gradient-to-tr from-temple-gold to-amber-200 shadow-lg filigree-border">
+<div class="w-full h-full bg-[#3b2a1a] rounded-xl overflow-hidden flex items-center justify-center">
+<img alt="Lord Sri Manakula Vinayagar Deity" class="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDb5Eqd885OAEJTFHZLBzLFuWKa6i1lxLe1v_sBXjTULWS1WbSXDmVsG6dsxsAE6BY1o-0am7lCDgY7qVbyEP9kJYsHZ5XKCCKGL7Mmy-d4FgiYCdVg4UoE45-osd50YQaSZK22A8PnOldtnotiCmyhsEQ33cw6PIWqUMsUlULRADBbwg2OJ9wjtgub4Uv2Dkd01pVU64RTD7noN-k4VslF1663kh9hrk3agHpKZ603_cyqF0hHXmsz">
+</div>
+</div>
+<p class="mt-3 font-serif text-sm font-semibold tracking-wide text-temple-brown text-center">
+                Maha Ganapathi Anugraha
+              </p>
+</div>
+<!-- Middle 4.5 cols: Value Proposition & Trust Badges -->
+<div class="lg:col-span-4 text-center lg:text-left space-y-5">
+<!-- Eyebrow -->
+<div class="flex items-center justify-center lg:justify-start gap-2 text-temple-saffron font-script text-2xl">
+<span class="">⊰❖⊱</span>
+<span class="">The Easiest Way to Serve Lord Vinayagar</span>
+<span class="">⊰❖⊱</span>
+</div>
+<!-- Brand Name -->
+<div class="space-y-1">
+<h2 class="font-serif text-5xl sm:text-6xl font-extrabold text-temple-green tracking-tight leading-none drop-shadow-sm">
+                  e-Hundi
+                </h2>
+<p class="font-serif italic text-lg sm:text-xl text-temple-brown/90 font-medium">
+                  Your Devotion. Our Responsibility.
+                </p>
+</div>
+<p class="text-xs sm:text-sm text-temple-tan leading-relaxed">
+                Offer your sacred kanikkai and hundi offerings directly into the devasthanam treasury from anywhere across the globe with complete spiritual sanctity.
+              </p>
+<!-- 4 Trust Badges Grid -->
+<div class="grid grid-cols-2 gap-3 sm:gap-4 pt-2">
+<div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/70 border border-temple-gold/30 shadow-xs">
+<div class="w-9 h-9 rounded-full bg-temple-gold/20 flex items-center justify-center text-temple-olive text-lg shrink-0">
+                    🛡️
+                  </div>
+<div class="text-left">
+<p class="font-bold text-xs text-temple-brown leading-tight">Secure &amp; Trusted</p>
+<span class="text-[10px] text-temple-tan">Official Gateway</span>
+</div>
+</div>
+<div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/70 border border-temple-gold/30 shadow-xs">
+<div class="w-9 h-9 rounded-full bg-temple-gold/20 flex items-center justify-center text-temple-olive text-lg shrink-0">
+                    📜
+                  </div>
+<div class="text-left">
+<p class="font-bold text-xs text-temple-brown leading-tight">Instant Receipt</p>
+<span class="text-[10px] text-temple-tan">Tax Exemption 80G</span>
+</div>
+</div>
+<div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/70 border border-temple-gold/30 shadow-xs">
+<div class="w-9 h-9 rounded-full bg-temple-gold/20 flex items-center justify-center text-temple-olive text-lg shrink-0">
+                    🛕
+                  </div>
+<div class="text-left">
+<p class="font-bold text-xs text-temple-brown leading-tight">Temple Activities</p>
+<span class="text-[10px] text-temple-tan">Annadhanam &amp; Seva</span>
+</div>
+</div>
+<div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/70 border border-temple-gold/30 shadow-xs">
+<div class="w-9 h-9 rounded-full bg-temple-gold/20 flex items-center justify-center text-temple-olive text-lg shrink-0">
+                    🌍
+                  </div>
+<div class="text-left">
+<p class="font-bold text-xs text-temple-brown leading-tight">Serve Anywhere</p>
+<span class="text-[10px] text-temple-tan">Global Devotees</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right 4 cols: Offering Interactive Card -->
+<div class="lg:col-span-4">
+<div class="bg-white/95 backdrop-blur rounded-2xl p-6 sm:p-7 shadow-lg border border-temple-gold/40 space-y-5">
+<div class="text-center space-y-1">
+<h3 class="font-serif text-2xl font-bold text-temple-brown">Make Your Offering</h3>
+<p class="text-xs text-temple-tan">Choose an amount or enter your own contribution</p>
+</div>
+<!-- Offering Amounts Grid -->
+<div class="grid grid-cols-3 gap-2.5"><button class="amount-btn py-2.5 rounded-xl border border-temple-gold/60 text-xs sm:text-sm font-bold text-temple-brown hover:bg-temple-cream transition" onclick="this.parentElement.querySelectorAll('button').forEach(b =&gt; { b.classList.remove('active-green'); b.classList.add('border-temple-gold/60', 'text-temple-brown'); }); this.classList.add('active-green'); this.classList.remove('border-temple-gold/60', 'text-temple-brown');" type="button">₹100</button>
+<button class="amount-btn py-2.5 rounded-xl border border-temple-gold/60 text-xs sm:text-sm font-bold text-temple-brown hover:bg-temple-cream transition" onclick="this.parentElement.querySelectorAll('button').forEach(b =&gt; { b.classList.remove('active-green'); b.classList.add('border-temple-gold/60', 'text-temple-brown'); }); this.classList.add('active-green'); this.classList.remove('border-temple-gold/60', 'text-temple-brown');" type="button">₹500</button>
+<button class="amount-btn active-green py-2.5 rounded-xl border-2 border-temple-green bg-temple-green text-white text-xs sm:text-sm font-extrabold shadow-sm transition" onclick="this.parentElement.querySelectorAll('button').forEach(b =&gt; { b.classList.remove('active-green'); b.classList.add('border-temple-gold/60', 'text-temple-brown'); }); this.classList.add('active-green'); this.classList.remove('border-temple-gold/60', 'text-temple-brown');" type="button">₹1000</button>
+<button class="amount-btn py-2.5 rounded-xl border border-temple-gold/60 text-xs sm:text-sm font-bold text-temple-brown hover:bg-temple-cream transition" onclick="this.parentElement.querySelectorAll('button').forEach(b =&gt; { b.classList.remove('active-green'); b.classList.add('border-temple-gold/60', 'text-temple-brown'); }); this.classList.add('active-green'); this.classList.remove('border-temple-gold/60', 'text-temple-brown');" type="button">₹2500</button>
+<button class="amount-btn py-2.5 rounded-xl border border-temple-gold/60 text-xs sm:text-sm font-bold text-temple-brown hover:bg-temple-cream transition" onclick="this.parentElement.querySelectorAll('button').forEach(b =&gt; { b.classList.remove('active-green'); b.classList.add('border-temple-gold/60', 'text-temple-brown'); }); this.classList.add('active-green'); this.classList.remove('border-temple-gold/60', 'text-temple-brown');" type="button">₹5000</button>
+<button class="amount-btn py-2.5 rounded-xl border border-dashed border-temple-gold/80 text-xs sm:text-sm font-semibold text-temple-brown hover:bg-temple-cream transition" onclick="this.parentElement.querySelectorAll('button').forEach(b =&gt; { b.classList.remove('active-green'); b.classList.add('border-temple-gold/60', 'text-temple-brown'); }); this.classList.add('active-green'); this.classList.remove('border-temple-gold/60', 'text-temple-brown');" type="button">Other</button></div>
+<!-- Full Width Donate Button -->
+<button class="w-full btn-bounce py-3.5 px-6 rounded-xl bg-temple-green hover:bg-[#3D491E] text-white font-bold text-base flex items-center justify-center gap-2 shadow-glowing-green tactile-btn" type="button">
+<span class="">Donate Now</span>
+<span class="text-sm">🔒</span>
+</button>
+<!-- Payment Channel Details -->
+<div class="pt-2 text-center border-t border-temple-gold/20 space-y-2">
+<p class="text-[11px] font-medium text-temple-tan tracking-wide">
+                    UPI / Cards / Net Banking / Wallets
+                  </p>
+<div class="flex items-center justify-center gap-3 text-xs opacity-75 grayscale hover:grayscale-0 transition-all">
+<span class="font-bold text-blue-700">VISA</span>
+<span class="font-bold text-red-600">Mastercard</span>
+<span class="font-bold text-amber-700">UPI</span>
+<span class="font-bold text-green-700">NetBanking</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: EHundiSpotlightPanel -->
+<!-- BEGIN: ServicesSection -->
+<section class="py-12 lg:py-16 bg-gradient-to-b from-[#FBF3E7] to-[#F5E8D6]" data-purpose="services-overview" id="services">
+<div class="max-w-7xl mx-auto px-4 sm:px-8 space-y-12">
+<!-- Section Header -->
+<div class="text-center space-y-2">
+<div class="text-temple-saffron font-script text-3xl sm:text-4xl">
+            Our Services
+          </div>
+<h2 class="font-serif text-3xl sm:text-4xl font-bold text-temple-brown">
+            What we do and how we serve Lord Vinayagar
+          </h2>
+<div class="w-24 h-0.5 bg-temple-gold mx-auto mt-2"></div>
+</div>
+<!-- Descriptive Sub-Row: Photo + Content + Side Deity Illustration -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-white/60 rounded-3xl p-6 sm:p-8 border border-temple-gold/40 shadow-sm">
+<!-- Left: Sanctum Photo -->
+<div class="lg:col-span-4">
+<div class="rounded-2xl overflow-hidden border-2 border-temple-gold shadow-md">
+<img alt="Temple Sanctum Darshan" class="w-full h-56 object-cover object-center" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfNAWbznhNYhYpi99lFmlk42jd0UOIJZp2tJGvKInVJzhoauZi1oR60ZWxA8wUyfUsYo2luQV2YtDIrSoA2MbvZQ3eUS2Mj7TxJ8dd2bw52RGVJv9cBcF9I8uXvIMM2tw-k3bI5w3uODh7T7v3cwTMCW1RALQDq51P00oEAFGC_Mc0NePsWrgqUodPTMp1VdKf8F_U3Eh6-AYDoLh9nSrSfU9On2oTFulrKxCaUt3Hd97B6EyiGGvE">
+</div>
+</div>
+<!-- Center: Detailed Seva Information -->
+<div class="lg:col-span-5 space-y-4">
+<h3 class="font-serif text-2xl font-bold text-temple-brown">
+              Sri Manakula Vinayagar <span class="font-normal text-temple-tan text-lg">Devasthanam</span>
+</h3>
+<p class="text-temple-tan text-sm leading-relaxed">
+              Every day at the shrine is marked with sacred rituals following centuries-old Agama Shastra traditions. From early morning Suprabhatham and Sahasranama archana to royal golden chariot processions, devotees are invited to partake in timeless spiritual offerings designed to elevate consciousness and bestow peaceful prosperity.
+            </p>
+<a class="btn-bounce inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-temple-saffron text-white text-xs font-bold tracking-wider hover:bg-temple-saffron-hover shadow-md tactile-btn" href="#pooja-booking">
+<span class="">Read More</span>
+<span class="">➜</span>
+</a>
+</div>
+<!-- Right: Graceful Deity Art Profile -->
+<div class="lg:col-span-3 flex justify-center">
+<div class="w-44 h-56 rounded-2xl overflow-hidden border border-temple-gold/40 p-1 bg-amber-50 shadow-inner">
+<img alt="Lord Vinayagar Golden Form" class="w-full h-full object-cover object-top rounded-xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXFGcn6lVidDKITlvnkBhFuLU2AEq8jpGKyoWHILGTmuDiW3jMyojUdhzhhTF78DNjc4hbmdmhpKIVu0tEiiJY9QeflWkDnNiuPDhq3hOApZamqwhm7JtzpBA4aBU9zhl7wdjEjYvqD3bHeu9UH3LrY3nA4tmfsp8fCboByPqaK8Pro3nHymZIXLVa3jRlbS2-Fh72T2rlcFXyNFpUyvQE9uwUZ637JRXJ3rRCk0cKcmnwn7baSb_s">
+</div>
+</div>
+</div>
+<!-- 4-UP Service Cards Row (Variant A) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
+<!-- Card 1: Book Pooja -->
+<div class="bg-white rounded-2xl p-6 border border-temple-gold/40 shadow-sm hover:shadow-md transition-all flex flex-col justify-between text-center space-y-4">
+<div class="w-16 h-16 mx-auto rounded-full bg-temple-cream border border-temple-gold/60 flex items-center justify-center text-2xl shadow-inner">
+              🪔
+            </div>
+<div class="space-y-2">
+<h4 class="font-serif text-xl font-bold text-temple-brown">Book Pooja</h4>
+<p class="text-xs text-temple-tan leading-relaxed">
+                Perform Sankalpam, Ganapathi Homam, and special Archana on auspicious occasions with family.
+              </p>
+</div>
+<a class="btn-bounce inline-flex items-center justify-center gap-1.5 py-2 px-4 rounded-full bg-temple-saffron text-white text-xs font-bold hover:bg-temple-saffron-hover shadow-sm tactile-btn" href="#book-pooja">
+<span class="">Book Now</span>
+<span class="">›</span>
+</a>
+</div>
+<!-- Card 2: Prasadam -->
+<div class="bg-white rounded-2xl p-6 border border-temple-gold/40 shadow-sm hover:shadow-md transition-all flex flex-col justify-between text-center space-y-4">
+<div class="w-16 h-16 mx-auto rounded-full bg-temple-cream border border-temple-gold/60 flex items-center justify-center text-2xl shadow-inner">
+              🍯
+            </div>
+<div class="space-y-2">
+<h4 class="font-serif text-xl font-bold text-temple-brown">Prasadam</h4>
+<p class="text-xs text-temple-tan leading-relaxed">
+                Receive pure temple laddu, modak, and sacred vibhuti directly consecrated at the sanctum sanctorum.
+              </p>
+</div>
+<a class="btn-bounce inline-flex items-center justify-center gap-1.5 py-2 px-4 rounded-full bg-temple-saffron text-white text-xs font-bold hover:bg-temple-saffron-hover shadow-sm tactile-btn" href="#prasadam">
+<span class="">Order Now</span>
+<span class="">›</span>
+</a>
+</div>
+<!-- Card 3: e-Hundi (FEATURED / ELEVATED) -->
+<div class="relative bg-white rounded-2xl p-6 border-2 border-temple-green shadow-sacred sm:-translate-y-2 flex flex-col justify-between text-center space-y-4 ring-2 ring-temple-gold/30">
+<!-- Pinned Badge -->
+<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-gradient-to-r from-temple-saffron to-amber-500 text-white text-[10px] font-extrabold uppercase tracking-wider shadow-sm">
+              Most Popular
+            </div>
+<div class="w-16 h-16 mx-auto rounded-full bg-[#EBF0DC] border border-temple-green/50 flex items-center justify-center text-2xl shadow-inner mt-1">
+              🪙
+            </div>
+<div class="space-y-2">
+<h4 class="font-serif text-xl font-bold text-temple-green">e-Hundi</h4>
+<p class="text-xs text-temple-tan leading-relaxed">
+                Direct online Kanikkai offering to support temple renovation, veda pathashala, and anna dhanam.
+              </p>
+</div>
+<a class="btn-bounce inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-full bg-temple-green text-white text-xs font-bold hover:bg-[#3D491E] shadow-sm tactile-btn" href="#ehundi">
+<span class="">Donate Online</span>
+<span class="">›</span>
+</a>
+</div>
+<!-- Card 4: Thiru Kalyanam -->
+<div class="bg-white rounded-2xl p-6 border border-temple-gold/40 shadow-sm hover:shadow-md transition-all flex flex-col justify-between text-center space-y-4">
+<div class="w-16 h-16 mx-auto rounded-full bg-temple-cream border border-temple-gold/60 flex items-center justify-center text-2xl shadow-inner">
+              👑
+            </div>
+<div class="space-y-2">
+<h4 class="font-serif text-xl font-bold text-temple-brown">Thiru Kalyanam</h4>
+<p class="text-xs text-temple-tan leading-relaxed">
+                Participate virtually or in person in divine celestial wedding celebrations and seek married harmony.
+              </p>
+</div>
+<a class="btn-bounce inline-flex items-center justify-center gap-1.5 py-2 px-4 rounded-full bg-temple-saffron text-white text-xs font-bold hover:bg-temple-saffron-hover shadow-sm tactile-btn" href="#thiru-kalyanam">
+<span class="">View Details</span>
+<span class="">›</span>
+</a>
+</div>
+</div>
+</div>
+</section>
+<!-- END: ServicesSection -->
+<!-- BEGIN: QuickDonationAndEvents -->
+<section class="py-12 lg:py-16 bg-[#FDF8F0] border-t border-temple-gold/30" data-purpose="quick-donation-strip" id="events">
+<div class="max-w-7xl mx-auto px-4 sm:px-8 space-y-8">
+<!-- Section Eyebrow & Title -->
+<div class="text-center space-y-2">
+<div class="text-temple-saffron font-script text-3xl">
+            Upcoming Events
+          </div>
+<h2 class="font-serif text-2xl sm:text-3xl font-bold text-temple-brown">
+            Help Support the Temple and Its Activities
+          </h2>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+<!-- Left 7 cols: Quick inline amount picker & gateways -->
+<div class="lg:col-span-7 bg-temple-cream/60 rounded-3xl p-6 sm:p-8 border border-temple-gold/50 space-y-6">
+<div class="flex flex-wrap items-center gap-3"><button class="amount-btn px-5 py-2.5 rounded-xl border border-temple-gold/70 bg-white font-bold text-xs sm:text-sm text-temple-brown hover:bg-temple-cream transition" onclick="const p=this.parentElement; p.querySelectorAll('.amount-btn').forEach(b=&gt;{ b.classList.remove('active-saffron'); b.classList.add('bg-white', 'text-temple-brown', 'border-temple-gold/70'); }); this.classList.add('active-saffron'); this.classList.remove('bg-white', 'text-temple-brown', 'border-temple-gold/70'); const inp=p.querySelector('input'); if(inp) inp.value='100';" type="button">₹100</button>
+<button class="amount-btn px-5 py-2.5 rounded-xl border border-temple-gold/70 bg-white font-bold text-xs sm:text-sm text-temple-brown hover:bg-temple-cream transition" onclick="const p=this.parentElement; p.querySelectorAll('.amount-btn').forEach(b=&gt;{ b.classList.remove('active-saffron'); b.classList.add('bg-white', 'text-temple-brown', 'border-temple-gold/70'); }); this.classList.add('active-saffron'); this.classList.remove('bg-white', 'text-temple-brown', 'border-temple-gold/70'); const inp=p.querySelector('input'); if(inp) inp.value='500';" type="button">₹500</button>
+<button class="amount-btn active-saffron px-5 py-2.5 rounded-xl border-2 border-temple-saffron bg-temple-saffron text-white font-bold text-xs sm:text-sm shadow-sm transition" onclick="const p=this.parentElement; p.querySelectorAll('.amount-btn').forEach(b=&gt;{ b.classList.remove('active-saffron'); b.classList.add('bg-white', 'text-temple-brown', 'border-temple-gold/70'); }); this.classList.add('active-saffron'); this.classList.remove('bg-white', 'text-temple-brown', 'border-temple-gold/70'); const inp=p.querySelector('input'); if(inp) inp.value='1000';" type="button">₹1000</button>
+<div class="relative flex-1 min-w-[140px]">
+<span class="absolute inset-y-0 left-3 flex items-center text-temple-tan text-xs font-bold">₹</span>
+<input class="w-full pl-7 pr-3 py-2 rounded-xl border border-temple-gold/70 bg-white text-xs sm:text-sm focus:ring-1 focus:ring-temple-saffron focus:border-temple-saffron" oninput="this.closest('.flex').querySelectorAll('.amount-btn').forEach(b=&gt;{ b.classList.remove('active-saffron'); b.classList.add('bg-white', 'text-temple-brown', 'border-temple-gold/70'); });" placeholder="Enter Amount" type="number" value="1000">
+</div>
+<button class="btn-bounce tactile-btn px-6 py-2.5 rounded-xl bg-temple-saffron hover:bg-temple-saffron-hover text-white text-xs sm:text-sm font-bold shadow-glowing-orange shrink-0" type="button">
+Donate Now ➜
+</button></div>
+<!-- Certified Trust note -->
+<p class="text-[11px] text-temple-tan leading-relaxed">
+              Official Devasthanam Registration: PY-DHRE-00103. Donations are exempt from income tax under Section 80G of the Indian Income Tax Act. Instant receipt generated upon completion.
+            </p>
+<!-- Supported Gateways Strip -->
+<div class="pt-2 flex flex-wrap items-center gap-4 text-xs font-bold text-temple-tan border-t border-temple-gold/30">
+<span class="text-xs uppercase tracking-wider text-temple-brown">Secured By:</span>
+<span class="text-blue-600">Razorpay</span>
+<span class="text-indigo-800">VISA</span>
+<span class="text-red-500">Mastercard</span>
+<span class="text-emerald-700">UPI AutoPay</span>
+</div>
+</div>
+<!-- Right 5 cols: Scan & Donate Card with Holy Kalash -->
+<div class="lg:col-span-5 bg-white rounded-3xl p-6 border border-temple-gold/50 shadow-md flex flex-col sm:flex-row items-center gap-6">
+<!-- Dynamic QR Code Container -->
+<div class="w-32 h-32 p-2 bg-white rounded-xl border border-dashed border-temple-gold flex items-center justify-center shrink-0">
+<!-- Inline Stylized QR SVG -->
+<svg class="w-full h-full text-temple-olive" fill="currentColor" viewBox="0 0 100 100">
+<rect height="30" rx="3" width="30"></rect>
+<rect fill="white" height="18" width="18" x="6" y="6"></rect>
+<rect height="10" width="10" x="10" y="10"></rect>
+<rect height="30" rx="3" width="30" x="70"></rect>
+<rect fill="white" height="18" width="18" x="76" y="6"></rect>
+<rect height="10" width="10" x="80" y="10"></rect>
+<rect height="30" rx="3" width="30" y="70"></rect>
+<rect fill="white" height="18" width="18" x="6" y="76"></rect>
+<rect height="10" width="10" x="10" y="80"></rect>
+<rect height="18" width="8" x="36" y="6"></rect>
+<rect height="8" width="14" x="48" y="16"></rect>
+<rect height="28" width="28" x="36" y="38"></rect>
+<rect height="8" width="18" x="72" y="42"></rect>
+<rect height="16" width="12" x="80" y="56"></rect>
+<rect height="14" width="16" x="40" y="78"></rect>
+<rect height="12" width="18" x="66" y="80"></rect>
+</svg>
+</div>
+<div class="space-y-2 text-center sm:text-left">
+<h3 class="font-serif text-lg font-bold text-temple-brown">Scan &amp; Donate</h3>
+<p class="text-xs text-temple-tan leading-tight">
+                Scan using any UPI App (GPay, PhonePe, Paytm, BHIM) for instant seva contribution.
+              </p>
+<div class="flex items-center justify-center sm:justify-start gap-2 pt-1">
+<span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">GPay</span>
+<span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">PhonePe</span>
+<span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-cyan-50 text-cyan-700 border border-cyan-200">Paytm</span>
+<span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-green-50 text-green-700 border border-green-200">BHIM</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: QuickDonationAndEvents -->
+</main>
+<!-- BEGIN: SacredFooter -->
+<footer class="bg-temple-dark-olive text-white/80 pt-16 pb-8 border-t-2 border-temple-gold/40 relative overflow-hidden" data-purpose="site-footer">
+<!-- Watermark temple silhouette icon in corner -->
+<div class="absolute -bottom-10 right-0 opacity-5 pointer-events-none">
+<svg class="w-96 h-96 text-white" fill="currentColor" viewBox="0 0 24 24">
+<path d="M12 2L9 5V8H7L6 11V14H4L3 18H21L20 14H18V11L17 8H15V5L12 2ZM11 6.5L12 5.5L13 6.5V8H11V6.5Z"></path>
+</svg>
+</div>
+<div class="max-w-7xl mx-auto px-4 sm:px-8">
+<!-- 5-Column Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-12 gap-8 pb-12 border-b border-[#4B5927]">
+<!-- Col 1: About the Temple (3.5 cols) -->
+<div class="lg:col-span-4 space-y-4">
+<div class="flex items-center gap-2">
+<span class="text-2xl text-temple-gold">🛕</span>
+<span class="font-serif text-lg font-bold text-white tracking-wide">
+              Sri Manakula Vinayagar Devasthanam
+            </span>
+</div>
+<p class="text-xs text-white/70 leading-relaxed text-justify">
+            Sri Manakula Vinayagar Temple is one of the most celebrated and historic Ganesha temples in South India, situated in the coastal town of Puducherry. Believed to have manifested over five centuries ago, it serves as a fountainhead of peace, unity, and divine grace.
+          </p>
+<div class="pt-2">
+<span class="text-xs font-semibold uppercase text-temple-gold tracking-wider">Follow Our Social Updates</span>
+<div class="flex items-center gap-2.5 mt-2">
+<a aria-label="Facebook" class="w-8 h-8 rounded-full bg-[#394220] hover:bg-temple-saffron flex items-center justify-center text-temple-gold hover:text-white transition text-xs font-bold" href="#facebook">f</a>
+<a aria-label="Instagram" class="w-8 h-8 rounded-full bg-[#394220] hover:bg-temple-saffron flex items-center justify-center text-temple-gold hover:text-white transition text-xs" href="#instagram">📷</a>
+<a aria-label="YouTube" class="w-8 h-8 rounded-full bg-[#394220] hover:bg-temple-saffron flex items-center justify-center text-temple-gold hover:text-white transition text-xs" href="#youtube">▶</a>
+<a aria-label="WhatsApp" class="w-8 h-8 rounded-full bg-[#394220] hover:bg-temple-saffron flex items-center justify-center text-temple-gold hover:text-white transition text-xs font-bold" href="#whatsapp">wa</a>
+</div>
+</div>
+</div>
+<!-- Col 2: Quick Links (2 cols) -->
+<div class="lg:col-span-2 space-y-3">
+<h4 class="font-serif text-sm font-bold text-temple-gold tracking-wider uppercase">Quick Links</h4>
+<ul class="space-y-2 text-xs">
+<li class=""><a class="hover:text-temple-saffron transition" href="#about">About Us</a></li>
+<li class=""><a class="hover:text-temple-saffron transition" href="#history">History</a></li>
+<li class=""><a class="hover:text-temple-saffron transition" href="#pooja-booking">Pooja Booking</a></li>
+<li class=""><a class="hover:text-temple-saffron transition" href="#donations">Donations</a></li>
+<li class=""><a class="hover:text-temple-saffron transition" href="#gallery">Photo Gallery</a></li>
+<li class=""><a class="hover:text-temple-saffron transition" href="#contact">Contact Us</a></li>
+</ul>
+</div>
+<!-- Col 3: Services (2 cols) -->
+<div class="lg:col-span-2 space-y-3">
+<h4 class="font-serif text-sm font-bold text-temple-gold tracking-wider uppercase">Services</h4>
+<ul class="space-y-2 text-xs">
+<li class=""><a class="hover:text-temple-saffron transition" href="#services">Daily Pooja</a></li>
+<li class=""><a class="hover:text-temple-saffron transition" href="#services">Special Pooja</a></li>
+<li class=""><a class="hover:text-temple-saffron transition" href="#services">Prasadam Counter</a></li>
+<li class=""><a class="hover:text-temple-saffron transition" href="#services">Thiru Kalyanam</a></li>
+<li class=""><a class="hover:text-temple-saffron transition" href="#services">Maha Abhishekam</a></li>
+<li class=""><a class="hover:text-temple-saffron transition" href="#ehundi">e-Hundi Kanikkai</a></li>
+</ul>
+</div>
+<!-- Col 4: Information (2 cols) -->
+<div class="lg:col-span-2 space-y-3">
+<h4 class="font-serif text-sm font-bold text-temple-gold tracking-wider uppercase">Information</h4>
+<ul class="space-y-2 text-xs">
+<li class=""><a class="hover:text-temple-saffron transition" href="#timings">Temple Timings</a></li>
+<li class=""><a class="hover:text-temple-saffron transition" href="#events">Festivals &amp; Events</a></li>
+<li class=""><a class="hover:text-temple-saffron transition" href="#news">News &amp; Updates</a></li>
+<li class=""><a class="hover:text-temple-saffron transition" href="#blog">Spiritual Blog</a></li>
+<li class=""><a class="hover:text-temple-saffron transition" href="#faq">FAQs</a></li>
+</ul>
+</div>
+<!-- Col 5: Newsletter (2 cols) -->
+<div class="lg:col-span-2 space-y-3">
+<h4 class="font-serif text-sm font-bold text-temple-gold tracking-wider uppercase">Newsletter</h4>
+<p class="text-xs text-white/70 leading-relaxed">
+            Subscribe to receive divine darshan updates, festival dates, and temple announcements.
+          </p>
+<form class="space-y-2" onsubmit="event.preventDefault();">
+<input class="w-full px-3 py-2 text-xs rounded bg-white text-temple-brown placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-temple-saffron" placeholder="Enter your email" required="" type="email">
+<button class="w-full py-2 rounded bg-temple-saffron hover:bg-temple-saffron-hover text-white text-xs font-bold tracking-wide transition shadow-sm tactile-btn" type="submit">
+              Subscribe
+            </button>
+</form>
+</div>
+</div>
+<!-- Bottom Copyright Bar -->
+<div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-white/60">
+<p class="">© 2024 Sri Manakula Vinayagar Devasthanam. All Rights Reserved.</p>
+<div class="flex items-center gap-4">
+<a class="hover:text-temple-gold transition" href="#privacy">Privacy Policy</a>
+<span class="">•</span>
+<a class="hover:text-temple-gold transition" href="#terms">Terms &amp; Conditions</a>
+</div>
+</div>
+</div>
+</footer>
+<!-- END: SacredFooter -->
+
+
+</body></html>
