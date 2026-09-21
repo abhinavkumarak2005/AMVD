@@ -11,3 +11,4 @@ aiosmtplib
 Jinja2
 supabase
 python-jose[cryptography]
+pytz
