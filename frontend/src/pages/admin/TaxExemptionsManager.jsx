@@ -9,6 +9,7 @@ export default function TaxExemptionsManager() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selectedReq, setSelectedReq] = useState(null)
+  const [message, setMessage] = useState('')
   
   useEffect(() => {
     fetchRequests()
@@ -39,7 +40,7 @@ export default function TaxExemptionsManager() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.session?.access_token}` 
         },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ status, message })
       })
       if (!res.ok) throw new Error("Update failed")
       
@@ -124,7 +125,7 @@ export default function TaxExemptionsManager() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button 
-                      onClick={() => setSelectedReq(req)}
+                      onClick={() => { setSelectedReq(req); setMessage(''); }}
                       className="text-apple-ink hover:text-temple-green p-1 transition-colors"
                     >
                       <Eye size={18} />
@@ -188,19 +189,32 @@ export default function TaxExemptionsManager() {
                 </div>
 
                 {selectedReq.status === 'pending' && (
-                  <div className="flex gap-3 pt-2">
-                    <button 
-                      onClick={() => handleUpdateStatus(selectedReq.id, 'rejected')}
-                      className="flex-1 bg-white border border-red-200 text-red-600 hover:bg-red-50 py-2.5 rounded-xl font-semibold transition-colors"
-                    >
-                      Reject
-                    </button>
-                    <button 
-                      onClick={() => handleUpdateStatus(selectedReq.id, 'approved')}
-                      className="flex-1 bg-temple-green hover:bg-[#1f5a3c] text-white py-2.5 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Check size={18} /> Approve
-                    </button>
+                  <div className="pt-2 space-y-3">
+                    <div>
+                      <p className="text-xs font-semibold text-apple-muted uppercase mb-1">Message to User</p>
+                      <textarea
+                        className="apple-input w-full text-sm py-2 px-3 h-20 resize-none"
+                        placeholder="e.g. Your 80G certificate process has been initiated and you will receive it shortly."
+                        value={message}
+                        onChange={e => setMessage(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex gap-3">
+                      <button 
+                        onClick={() => handleUpdateStatus(selectedReq.id, 'rejected')}
+                        disabled={!message.trim()}
+                        className="flex-1 bg-white border border-red-200 text-red-600 hover:bg-red-50 py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Reject
+                      </button>
+                      <button 
+                        onClick={() => handleUpdateStatus(selectedReq.id, 'approved')}
+                        disabled={!message.trim()}
+                        className="flex-1 bg-temple-green hover:bg-[#1f5a3c] text-white py-2.5 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Check size={18} /> Approve
+                      </button>
+                    </div>
                   </div>
                 )}
                 {selectedReq.status !== 'pending' && (

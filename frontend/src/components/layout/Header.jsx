@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { label: 'Timings', href: '#timings' },
   { label: 'Gallery', href: '#gallery' },
   { label: 'Donations', href: '/donations' },
+  { label: 'Blog', href: '#blog' },
   { label: 'Contact Us', href: '#contact' },
 ]
 
@@ -38,12 +39,12 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between">
         {/* Brand */}
         <Link to="/" className="flex items-center gap-3 group focus:outline-none">
-          <div className="w-12 h-12 rounded-lg bg-temple-cream border border-temple-gold/60 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform overflow-hidden p-1">
-            <img src={logoGold} alt="Sri Manakula Vinayagar" className="w-full h-full object-contain" />
+          <div className="w-16 h-16 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <img src={logoGold} alt="Arulmigu Manakula Vinayagar" className="w-full h-full object-contain drop-shadow-sm" />
           </div>
           <div className="flex flex-col">
             <span className="font-serif text-lg sm:text-xl font-bold tracking-tight text-temple-brown leading-tight group-hover:text-temple-saffron transition-colors">
-              Sri Manakula
+              Arulmigu Manakula
             </span>
             <span className="font-serif text-xs sm:text-sm font-semibold tracking-wider uppercase text-temple-gold">
               Vinayagar Devasthanam

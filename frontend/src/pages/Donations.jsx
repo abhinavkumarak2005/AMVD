@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { Loader2, Lock } from 'lucide-react'
 import Header from '../components/layout/Header'
 import { useAuthStore } from '../store'
@@ -10,15 +10,23 @@ import ExemptionModal from '../components/layout/ExemptionModal'
 export default function Donations() {
   const { session, openAuthModal } = useAuthStore()
   const navigate = useNavigate()
+  const location = useLocation()
   
   // Preset amounts based on the reference image
   const PRESETS = [100, 500, 1000, 2500, 5000]
   
-  const [amount, setAmount] = useState(1000)
-  const [isCustom, setIsCustom] = useState(false)
-  const [customAmount, setCustomAmount] = useState('')
+  // Initialize from location state if available
+  const initialAmount = location.state?.amount ? parseInt(location.state.amount) : 1000
+  const isInitialCustom = location.state?.amount && !PRESETS.includes(initialAmount)
+  
+  const [amount, setAmount] = useState(isInitialCustom ? 0 : initialAmount)
+  const [isCustom, setIsCustom] = useState(isInitialCustom)
+  const [customAmount, setCustomAmount] = useState(isInitialCustom ? location.state.amount.toString() : '')
   const [loading, setLoading] = useState(false)
   const [exemptionLimit, setExemptionLimit] = useState(10000)
+  
+  // New state to show auth options
+  const [showAuthOptions, setShowAuthOptions] = useState(location.state?.anonymous ? true : false)
 
   // Modal State
   const [showModal, setShowModal] = useState(false)
@@ -33,9 +41,9 @@ export default function Donations() {
       .catch(console.error)
   }, [])
 
-  const handleDonate = async () => {
-    if (!session) {
-      openAuthModal('login')
+  const handleDonate = async (forceAnonymous = false) => {
+    if (!session && !forceAnonymous && !showAuthOptions) {
+      setShowAuthOptions(true)
       return
     }
 
@@ -51,7 +59,7 @@ export default function Donations() {
       // 1. Create order
       const { data } = await api.post('/api/donations/create', {
         amount_rupees: finalAmount,
-        user_id: session.user.id,
+        user_id: session?.user?.id || null,
         notes: 'General E-Undiyal' // Hardcoded since we removed the dropdown
       })
 
@@ -61,7 +69,7 @@ export default function Donations() {
         order_id: data.order_id,
         amount: data.amount_rupees * 100,
         currency: 'INR',
-        name: 'Sri Manakula Vinayagar',
+        name: 'Arulmigu Manakula Vinayagar',
         description: 'Make Your Offering',
         handler: async (response) => {
           // 3. Fallback manual verify for localhost since webhooks can't reach laptop
@@ -77,16 +85,26 @@ export default function Donations() {
             if (finalAmount >= exemptionLimit && res.data.id) {
               setTxDetails({ id: res.data.id, reference: res.data.reference, amount_rupees: finalAmount })
               setShowModal(true)
-            } else {
+            } else if (session?.user) {
               navigate('/dashboard/receipts')
+            } else {
+              // Anonymous donation, reset form and stay on page
+              setAmount(100)
+              setIsCustom(false)
+              setCustomAmount('')
             }
           } catch(e) {
             console.error("Verify failed", e)
             toast.success('Thank you for your generous offering! 🙏')
-            navigate('/dashboard/receipts')
+            if (session?.user) navigate('/dashboard/receipts')
           }
         },
-        modal: { ondismiss: () => toast.info('Offering cancelled') },
+        modal: { 
+          ondismiss: () => {
+            toast.info('Offering cancelled')
+            api.put(`/api/donations/order/${data.order_id}/cancel`).catch(console.error)
+          } 
+        },
       })
       rzp.open()
     } catch (err) {
@@ -168,24 +186,40 @@ export default function Donations() {
               </div>
             )}
 
-            {/* Submit Button */}
-            <button 
-              onClick={handleDonate}
-              disabled={loading || (isCustom && (!customAmount || parseInt(customAmount) < 10))}
-              className="w-full py-4 rounded-2xl bg-[#4A5822] hover:bg-[#3d491c] text-white font-bold text-xl flex items-center justify-center gap-2 shadow-xl shadow-[#4A5822]/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed mt-4"
-            >
-              {loading ? (
-                <Loader2 size={24} className="animate-spin" />
-              ) : (
-                <>
-                  Donate ₹{formatCurrency(isCustom ? (parseInt(customAmount) || 0) : amount)} 
-                  <Lock size={18} className="ml-1 text-white/80" fill="currentColor" />
-                </>
-              )}
-            </button>
+            {/* Refund Note */}
+            <p className="text-xs text-[#967C5E] font-bold text-center mt-2">
+              * Refund will not be applicable once the payment is completed.
+            </p>
+
+            {/* Submit Buttons */}
+            {(!session && showAuthOptions) ? (
+              <div className="flex flex-col gap-3 mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                <button 
+                  onClick={() => handleDonate(true)}
+                  disabled={loading || (isCustom && (!customAmount || parseInt(customAmount) < 10))}
+                  className="w-full py-3.5 rounded-2xl bg-[#4A5822] hover:bg-[#3d491c] text-white font-bold text-lg flex items-center justify-center gap-2 shadow-xl shadow-[#4A5822]/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {loading ? <Loader2 size={24} className="animate-spin" /> : <>Donate Anonymously ₹{formatCurrency(isCustom ? (parseInt(customAmount) || 0) : amount)}</>}
+                </button>
+                <button 
+                  onClick={() => openAuthModal('login')}
+                  className="w-full py-3 rounded-2xl bg-white border border-[#D6C1A4] hover:bg-[#FDFBF7] text-[#4A5822] font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                >
+                  Login to track your offering
+                </button>
+              </div>
+            ) : (
+              <button 
+                onClick={() => handleDonate(false)}
+                disabled={loading || (isCustom && (!customAmount || parseInt(customAmount) < 10))}
+                className="w-full py-4 rounded-2xl bg-[#4A5822] hover:bg-[#3d491c] text-white font-bold text-xl flex items-center justify-center gap-2 shadow-xl shadow-[#4A5822]/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed mt-4"
+              >
+                {loading ? <Loader2 size={24} className="animate-spin" /> : <>Donate ₹{formatCurrency(isCustom ? (parseInt(customAmount) || 0) : amount)} <Lock size={18} className="ml-1 text-white/80" fill="currentColor" /></>}
+              </button>
+            )}
             
             {/* Divider */}
-            <div className="pt-6 pb-2 border-b border-[#E8DCC8]"></div>
+            <div className="pb-3 border-b border-[#E8DCC8]"></div>
 
             {/* Footer Trust Icons */}
             <div className="text-center space-y-3">

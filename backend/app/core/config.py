@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "Sri Manakula Vinayagar API"
+    PROJECT_NAME: str = "Arulmigu Manakula Vinayagar API"
     DATABASE_URL: str
     SUPABASE_URL: str
     SUPABASE_ANON_KEY: str

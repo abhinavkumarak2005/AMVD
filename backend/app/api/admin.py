@@ -23,21 +23,48 @@ async def get_my_permissions(user_id: str = Depends(get_current_user), db: Conne
 async def get_bookings(
     db: Connection = Depends(get_db), 
     admin_id: str = Depends(get_current_admin),
-    status: Optional[str] = None
+    status: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    phone: Optional[str] = None
 ):
     query = """
         SELECT b.id, b.date, b.session, b.status, b.reference, b.amount_rupees,
+               b.created_at::text, 
+               (SELECT razorpay_order_id FROM payments WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) as razorpay_order_id,
+               (SELECT razorpay_payment_id FROM payments WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) as razorpay_payment_id,
                s.name as service_name,
                u.full_name as user_name, u.email as user_email, u.phone as user_phone
         FROM bookings b
         JOIN services s ON b.service_id = s.id
         JOIN users u ON b.user_id = u.id
+        WHERE 1=1
     """
     args = []
+    idx = 1
+    
+    if start_date and end_date:
+        ist = pytz.timezone('Asia/Kolkata')
+        dt_start = ist.localize(datetime.strptime(start_date, "%Y-%m-%d")).replace(hour=0, minute=0, second=0)
+        dt_end = ist.localize(datetime.strptime(end_date, "%Y-%m-%d")).replace(hour=23, minute=59, second=59)
+        query += f" AND b.created_at >= ${idx} AND b.created_at <= ${idx+1}"
+        args.extend([dt_start, dt_end])
+        idx += 2
+        
+    if phone:
+        query += f" AND u.phone ILIKE ${idx}"
+        args.append(f"%{phone}%")
+        idx += 1
+        
     if status:
-        query += " WHERE b.status = $1"
+        query += f" AND b.status = ${idx}"
         args.append(status)
+        idx += 1
+        
     query += " ORDER BY b.created_at DESC"
+    
+    # Auto-cancel old pending bookings
+    await db.execute("UPDATE bookings SET status = 'cancelled' WHERE status = 'pending_payment' AND created_at < NOW() - INTERVAL '15 minutes'")
     
     records = await db.fetch(query, *args)
     return [dict(r) for r in records]
@@ -89,7 +116,7 @@ async def update_booking_status(
         if update.status == 'cancelled' and booking['email']:
             reason_text = f"<p>Reason: {update.reason}</p>" if update.reason else ""
             html = f"""
-                <h1>Om Sri Manakula Vinayagar!</h1>
+                <h1>Arulmigu Manakula Vinayagar Devasthanam</h1>
                 <p>Dear {booking['full_name']},</p>
                 <p>We regret to inform you that your booking for {booking['service_name']} on {booking['date']} (Ref: {booking['reference']}) has been cancelled.</p>
                 {reason_text}
@@ -196,7 +223,7 @@ async def unblock_date(date_str: str, db: Connection = Depends(get_db), admin_id
 
 @router.get("/services")
 async def get_admin_services(db: Connection = Depends(get_db), admin_id: str = Depends(require_permission('manage_services'))):
-    records = await db.fetch("SELECT id, name, category, price_rupees, slot_capacity, advance_days, max_persons, sessions::text, available_days::text FROM services ORDER BY name")
+    records = await db.fetch("SELECT id, name, category, price_rupees, slot_capacity, advance_days, max_persons, sessions::text, available_days::text FROM services WHERE is_active = true ORDER BY name")
     return [
         {
             **dict(r), 
@@ -238,6 +265,44 @@ async def update_service(
     diff = compute_diff(old_dict, update.model_dump(mode="json"))
     if diff:
         await log_audit(db, admin_id, "UPDATE_SERVICE", "service", service_id, diff)
+    return {"status": "success"}
+
+class CreateServiceRequest(BaseModel):
+    name: str
+    category: str
+    price_rupees: int
+    slot_capacity: int
+    advance_days: int
+    max_persons: int
+    sessions: List[str]
+    available_days: List[int]
+
+@router.post("/services")
+async def create_service(
+    req: CreateServiceRequest, 
+    db: Connection = Depends(get_db), 
+    admin_id: str = Depends(require_permission('manage_services'))
+):
+    service_id = await db.fetchval(
+        """
+        INSERT INTO services (name, category, session_type, price_rupees, slot_capacity, advance_days, max_persons, sessions, available_days)
+        VALUES ($1, $2, 'all_day', $3, $4, $5, $6, $7::jsonb, $8::jsonb)
+        RETURNING id
+        """,
+        req.name, req.category, req.price_rupees, req.slot_capacity, req.advance_days, req.max_persons,
+        json.dumps(req.sessions), json.dumps(req.available_days)
+    )
+    await log_audit(db, admin_id, "CREATE_SERVICE", "service", str(service_id), req.model_dump(mode="json"))
+    return {"status": "success", "id": service_id}
+
+@router.delete("/services/{service_id}")
+async def delete_service(
+    service_id: str, 
+    db: Connection = Depends(get_db), 
+    admin_id: str = Depends(require_permission('manage_services'))
+):
+    await db.execute("UPDATE services SET is_active = false WHERE id = $1", service_id)
+    await log_audit(db, admin_id, "DELETE_SERVICE", "service", service_id, {})
     return {"status": "success"}
 
 # --- USERS MANAGEMENT ---
@@ -363,8 +428,7 @@ async def get_dashboard_metrics(
     bookings_stats = await db.fetchrow(f"""
         SELECT 
             COUNT(id) as total_bookings,
-            COALESCE(SUM(CASE WHEN status = 'confirmed' THEN amount_rupees ELSE 0 END), 0) as total_revenue,
-            COUNT(CASE WHEN status = 'pending_approval' THEN 1 END) as pending_approvals
+            COALESCE(SUM(CASE WHEN status = 'confirmed' THEN amount_rupees ELSE 0 END), 0) as total_revenue
         FROM bookings
         {date_filter}
     """, *args)
@@ -405,7 +469,6 @@ async def get_dashboard_metrics(
     return {
         "revenue": bookings_stats['total_revenue'],
         "bookings": bookings_stats['total_bookings'],
-        "pending_approvals": bookings_stats['pending_approvals'],
         "occupancy_rate": occupancy_rate,
         "donations_count": donations_stats['donations_count'],
         "total_donations": donations_stats['total_donations'],
@@ -425,7 +488,8 @@ async def get_donations(
     admin_id: str = Depends(require_permission('view_reports'))
 ):
     query = """
-        SELECT d.id, d.reference, d.amount_rupees, d.status, d.created_at, d.notes,
+        SELECT d.id, d.reference, d.amount_rupees, d.status, d.created_at::text, d.notes,
+               d.razorpay_order_id, d.razorpay_payment_id,
                u.full_name as user_name, u.email as user_email, u.phone as user_phone
         FROM e_undiyal_transactions d
         JOIN users u ON d.user_id = u.id
@@ -433,6 +497,9 @@ async def get_donations(
     """
     args = []
     idx = 1
+    
+    # Auto-cancel old initiated donations
+    await db.execute("UPDATE e_undiyal_transactions SET status = 'cancelled' WHERE status = 'initiated' AND created_at < NOW() - INTERVAL '15 minutes'")
     
     if start_date and end_date:
         ist = pytz.timezone('Asia/Kolkata')
@@ -455,7 +522,7 @@ async def get_donations(
     query += " ORDER BY d.created_at DESC"
     
     records = await db.fetch(query, *args)
-    return [{**dict(r), "created_at": r["created_at"].isoformat()} for r in records]
+    return [dict(r) for r in records]
 
 class DonationStatusUpdate(BaseModel):
     status: str
@@ -536,20 +603,34 @@ async def get_tax_exemptions(db: Connection = Depends(get_db), admin_id: str = D
 
 class ExemptionStatusUpdate(BaseModel):
     status: str
+    message: Optional[str] = None
 
 @router.put("/tax-exemptions/{exemption_id}/status")
 async def update_exemption_status(
     exemption_id: str, 
     update: ExemptionStatusUpdate, 
+    background_tasks: BackgroundTasks,
     db: Connection = Depends(get_db), 
     admin_id: str = Depends(require_permission('manage_exemptions'))
 ):
     if update.status not in ['pending', 'approved', 'rejected']:
         raise HTTPException(400, "Invalid status.")
         
-    old_status = await db.fetchval("SELECT status FROM tax_exemptions WHERE id = $1", exemption_id)
+    record = await db.fetchrow(
+        "SELECT t.status, u.email as user_email, u.full_name as user_name FROM tax_exemptions t JOIN users u ON t.user_id = u.id WHERE t.id = $1", 
+        exemption_id
+    )
+    if not record:
+        raise HTTPException(404, "Request not found.")
+        
+    old_status = record["status"]
     await db.execute("UPDATE tax_exemptions SET status = $1, handled_by = $2, updated_at = NOW() WHERE id = $3", update.status, admin_id, exemption_id)
     
+    if update.message and update.status in ['approved', 'rejected']:
+        subject = f"Update on your 80G Tax Exemption Request: {update.status.title()}"
+        body = f"<p>Dear {record['user_name']},</p><p>{update.message}</p>"
+        background_tasks.add_task(send_email, record["user_email"], subject, body)
+        
     await log_audit(db, admin_id, "UPDATE_EXEMPTION_STATUS", "tax_exemption", exemption_id, {"status": {"old": old_status, "new": update.status}})
     return {"status": "success"}
 
@@ -568,17 +649,19 @@ async def get_report_metrics(
     args_b = []
     
     if start_date:
+        ist = pytz.timezone('Asia/Kolkata')
+        dt_start = ist.localize(datetime.strptime(start_date, "%Y-%m-%d")).replace(hour=0, minute=0, second=0)
         date_filter_e += f" AND created_at >= ${len(args_e) + 1}"
         date_filter_b += f" AND created_at >= ${len(args_b) + 1}"
-        args_e.append(start_date)
-        args_b.append(start_date)
+        args_e.append(dt_start)
+        args_b.append(dt_start)
     if end_date:
-        # Include the entire end_date day
-        end_date_time = end_date + " 23:59:59"
+        ist = pytz.timezone('Asia/Kolkata')
+        dt_end = ist.localize(datetime.strptime(end_date, "%Y-%m-%d")).replace(hour=23, minute=59, second=59)
         date_filter_e += f" AND created_at <= ${len(args_e) + 1}"
         date_filter_b += f" AND created_at <= ${len(args_b) + 1}"
-        args_e.append(end_date_time)
-        args_b.append(end_date_time)
+        args_e.append(dt_end)
+        args_b.append(dt_end)
 
     # Donations
     total_donations = await db.fetchval(f"SELECT COALESCE(SUM(amount_rupees), 0) FROM e_undiyal_transactions WHERE status = 'success'{date_filter_e}", *args_e)

@@ -11,7 +11,7 @@ async def send_email(to_email: str, subject: str, html_content: str, attachment_
     """
     
     msg = EmailMessage()
-    msg['From'] = f"Sri Manakula Vinayagar Devasthanam <{settings.SMTP_FROM_EMAIL}>"
+    msg['From'] = f"Arulmigu Manakula Vinayagar Devasthanam <{settings.SMTP_FROM_EMAIL}>"
     msg['To'] = to_email
     msg['Subject'] = subject
     

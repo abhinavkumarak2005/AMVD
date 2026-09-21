@@ -1,19 +1,33 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabaseClient'
-import { Loader2, Plus, Save, ShieldAlert } from 'lucide-react'
+import { Loader2, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
-const AVAILABLE_PERMISSIONS = [
-  { key: 'manage_users', label: 'Manage Users' },
-  { key: 'manage_roles', label: 'Manage Roles' },
-  { key: 'manage_services', label: 'Manage Services' },
-  { key: 'manage_bookings', label: 'Manage Bookings' },
-  { key: 'manage_calendar', label: 'Manage Calendar' },
-  { key: 'manage_notices', label: 'Manage Notices' },
-  { key: 'view_reports', label: 'View Reports' },
-  { key: 'manage_exemptions', label: 'Manage Tax Exemptions' },
-  { key: 'all', label: 'Super Admin Access (All)' }
+const PERMISSION_MODULES = [
+  { key: 'users', label: 'Users', options: ['full'] },
+  { key: 'roles', label: 'Roles', options: ['full'] },
+  { key: 'services', label: 'Services', options: ['view', 'full'] },
+  { key: 'bookings', label: 'Bookings', options: ['view', 'full'] },
+  { key: 'donations', label: 'Donations (eHundi)', options: ['view', 'full'] },
+  { key: 'calendar', label: 'Calendar', options: ['full'] },
+  { key: 'notices', label: 'Notices', options: ['full'] },
+  { key: 'reports', label: 'Reports', options: ['view', 'full'] },
+  { key: 'exemptions', label: 'Tax Exemptions', options: ['view', 'full'] },
+  { key: 'all', label: 'Super Admin Access (All)', options: ['full'] }
 ]
+
+const ToggleSwitch = ({ checked, onChange, disabled }) => (
+  <div className="relative inline-block">
+    <input 
+      type="checkbox" 
+      className="sr-only peer"
+      checked={checked}
+      disabled={disabled}
+      onChange={(e) => onChange(e.target.checked)}
+    />
+    <div className={`w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-temple-green ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}></div>
+  </div>
+)
 
 export default function RolesManager() {
   const [roles, setRoles] = useState([])
@@ -68,15 +82,30 @@ export default function RolesManager() {
     }
   }
 
-  const handlePermissionToggle = async (roleName, permKey, currentValue, currentPermissions) => {
-    if (roleName === 'super_admin' && permKey === 'all' && currentValue) {
+  const handlePermissionToggle = async (roleName, modKey, accessLevel, isChecked, currentPermissions) => {
+    if (roleName === 'super_admin' && modKey === 'all' && !isChecked) {
       toast.error("Cannot revoke super_admin master access")
       return
     }
 
-    const newPermissions = { ...currentPermissions, [permKey]: !currentValue }
+    let newPermissions = { ...currentPermissions }
     
-    // Optimistic UI update
+    if (modKey === 'all') {
+      newPermissions['all'] = isChecked
+    } else {
+      if (accessLevel === 'manage') {
+        newPermissions[`manage_${modKey}`] = isChecked
+        if (isChecked) {
+          newPermissions[`view_${modKey}`] = true
+        }
+      } else if (accessLevel === 'view') {
+        newPermissions[`view_${modKey}`] = isChecked
+        if (!isChecked) {
+          newPermissions[`manage_${modKey}`] = false
+        }
+      }
+    }
+    
     setRoles(prev => prev.map(r => r.name === roleName ? { ...r, permissions: newPermissions } : r))
 
     try {
@@ -92,7 +121,7 @@ export default function RolesManager() {
       if (!res.ok) throw new Error("Failed to update permissions")
     } catch (e) {
       toast.error(e.message)
-      fetchRoles() // Revert on error
+      fetchRoles()
     }
   }
 
@@ -132,32 +161,57 @@ export default function RolesManager() {
         <div className="py-10 text-center text-apple-muted">No roles found or access denied.</div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          {roles.map(role => (
-            <div key={role.name} className="apple-card p-0 overflow-hidden border border-gray-100">
+          {roles.filter(r => r.name !== 'devotee').map(role => (
+            <div key={role.name} className="apple-card p-0 overflow-hidden border border-gray-100 flex flex-col h-full">
               <div className="bg-gray-50/80 px-4 py-3 border-b border-gray-100 flex justify-between items-center">
                 <h3 className="font-semibold text-apple-ink capitalize">{role.name.replace(/_/g, ' ')}</h3>
                 <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full font-mono">{role.name}</span>
               </div>
-              <div className="p-4 space-y-3">
-                {AVAILABLE_PERMISSIONS.map(perm => {
-                  const hasPerm = role.permissions?.[perm.key] || role.permissions?.['all']
-                  const isInherited = perm.key !== 'all' && role.permissions?.['all']
+              <div className="p-4 flex-1 flex flex-col gap-3">
+                {PERMISSION_MODULES.map(mod => {
+                  const isInherited = role.permissions?.['all'] && mod.key !== 'all'
+                  const hasView = !!role.permissions?.[`view_${mod.key}`]
+                  const hasManage = !!role.permissions?.[`manage_${mod.key}`]
+                  
                   return (
-                    <label key={perm.key} className="flex items-center justify-between cursor-pointer group">
-                      <span className={`text-sm ${hasPerm ? 'text-apple-ink font-medium' : 'text-apple-muted'}`}>
-                        {perm.label}
+                    <div key={mod.key} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-50 pb-2 last:border-0 last:pb-0">
+                      <span className={`text-sm ${hasView || hasManage || mod.key === 'all' && role.permissions?.['all'] ? 'text-apple-ink font-medium' : 'text-apple-muted'}`}>
+                        {mod.label}
                       </span>
-                      <div className="relative">
-                        <input 
-                          type="checkbox" 
-                          className="sr-only peer"
-                          checked={!!role.permissions?.[perm.key]}
-                          disabled={isInherited}
-                          onChange={(e) => handlePermissionToggle(role.name, perm.key, !!role.permissions?.[perm.key], role.permissions)}
-                        />
-                        <div className={`w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-temple-green ${isInherited ? 'opacity-50 cursor-not-allowed' : ''}`}></div>
-                      </div>
-                    </label>
+                      
+                      {mod.key === 'all' ? (
+                        <div className="self-end sm:self-auto">
+                          <ToggleSwitch 
+                            checked={!!role.permissions?.['all']}
+                            disabled={role.name === 'super_admin'}
+                            onChange={c => handlePermissionToggle(role.name, mod.key, 'all', c, role.permissions || {})}
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-end gap-4 ml-4">
+                          {mod.options.includes('view') && (
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <span className="text-xs text-apple-muted">View</span>
+                              <ToggleSwitch 
+                                checked={isInherited || hasView}
+                                disabled={isInherited}
+                                onChange={c => handlePermissionToggle(role.name, mod.key, 'view', c, role.permissions || {})}
+                              />
+                            </label>
+                          )}
+                          {mod.options.includes('full') && (
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <span className="text-xs text-apple-muted">Manage</span>
+                              <ToggleSwitch 
+                                checked={isInherited || hasManage}
+                                disabled={isInherited}
+                                onChange={c => handlePermissionToggle(role.name, mod.key, 'manage', c, role.permissions || {})}
+                              />
+                            </label>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   )
                 })}
               </div>

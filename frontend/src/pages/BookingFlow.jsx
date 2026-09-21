@@ -8,6 +8,8 @@ import api from '../lib/api'
 import { toast } from 'sonner'
 import { format, addDays } from 'date-fns'
 import ExemptionModal from '../components/layout/ExemptionModal'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 
 const STEPS = [
   { id: 1, label: 'Select Date', icon: CalendarDays },
@@ -184,7 +186,7 @@ export default function BookingFlow() {
         order_id: data.razorpay_order_id,
         amount: data.amount_rupees * 100,
         currency: 'INR',
-        name: 'Sri Manakula Vinayagar Devasthanam',
+        name: 'Arulmigu Manakula Vinayagar Devasthanam',
         description: 'Pooja Service Booking',
         handler: async (response) => {
           try {
@@ -208,7 +210,12 @@ export default function BookingFlow() {
             navigate('/booking/success', { state: { bookingId: data.booking_id } }) // Fallback
           }
         },
-        modal: { ondismiss: () => toast.info('Payment cancelled') },
+        modal: { 
+          ondismiss: () => {
+            toast.info('Payment cancelled')
+            api.put(`/api/bookings/${data.booking_id}/cancel`).catch(console.error)
+          } 
+        },
       })
       rzp.open()
     } catch (err) {
@@ -246,6 +253,15 @@ export default function BookingFlow() {
           {/* Timer */}
           <div className="flex justify-center"><CountdownTimer /></div>
 
+          {/* Service Context Banner */}
+          {serviceDetails && (
+            <div className="bg-white/80 border border-temple-gold/40 rounded-2xl p-4 text-center shadow-sm">
+              <span className="text-xs font-bold text-temple-tan uppercase tracking-widest">Booking Service</span>
+              <h2 className="text-xl font-serif font-bold text-temple-brown mt-1">{serviceDetails.name}</h2>
+              {serviceDetails.post_booking_info && <p className="text-xs text-temple-olive mt-1 max-w-md mx-auto">{serviceDetails.post_booking_info}</p>}
+            </div>
+          )}
+
           {/* Step content */}
           <div className="bg-white rounded-3xl p-6 sm:p-8 border border-temple-gold/30 shadow-card-lift">
             <AnimatePresence mode="wait">
@@ -254,11 +270,14 @@ export default function BookingFlow() {
                   <h2 className="font-serif text-2xl font-bold text-temple-brown">Select Date & Session</h2>
                   <div className="space-y-2">
                     <label className="text-xs font-semibold text-temple-brown">Booking Date</label>
-                    <input type="date"
-                      min={format(addDays(new Date(), serviceDetails?.advance_days || 3), 'yyyy-MM-dd')}
-                      value={formData.date}
-                      onChange={(e) => setFormData((f) => ({ ...f, date: e.target.value }))}
+                    <DatePicker
+                      selected={formData.date ? new Date(formData.date) : null}
+                      onChange={(date) => setFormData((f) => ({ ...f, date: date ? format(date, 'yyyy-MM-dd') : '' }))}
+                      minDate={addDays(new Date(), serviceDetails?.advance_days || 3)}
+                      dateFormat="MMMM d, yyyy"
+                      placeholderText="Select a date"
                       className="w-full px-3 py-2.5 rounded-xl border border-temple-gold/50 bg-white text-sm focus:ring-2 focus:ring-temple-saffron/30"
+                      wrapperClassName="w-full"
                     />
                     {formData.date && serviceDetails?.available_days && !serviceDetails.available_days.includes(new Date(formData.date).getDay()) && (
                       <p className="text-xs text-red-500 font-bold">This service is not available on this day of the week.</p>
@@ -315,7 +334,7 @@ export default function BookingFlow() {
                   {formData.persons.map((p, i) => (
                     <div key={i} className="p-4 bg-temple-cream/40 rounded-xl border border-temple-gold/30 space-y-3">
                       <h4 className="text-sm font-semibold text-temple-brown">Person {i + 1}</h4>
-                      {[['fullName', 'Full Name', 'Enter name'], ['email', 'Email (Optional)', 'Email address'], ['age', 'Age', 'Age'], ['relation', 'Relation (e.g. Father, Friend)', 'Relation to booking person'], ['phone', 'Phone Number (Optional)', 'Phone']].map(([key, label, placeholder]) => (
+                      {[['fullName', 'Full Name *', 'Enter name'], ['email', 'Email', 'Email address'], ['age', 'Age *', 'Age'], ['relation', 'Relation (e.g. Father, Friend) *', 'Relation to booking person'], ['phone', 'Phone Number', 'Phone']].map(([key, label, placeholder]) => (
                         <div key={key}>
                           <label className="text-xs text-temple-tan">{label}</label>
                           <input placeholder={placeholder} value={p[key] || ''} type={key === 'age' || key === 'phone' ? 'number' : 'text'}
@@ -335,7 +354,29 @@ export default function BookingFlow() {
                       <ChevronLeft size={16} /> Back
                     </button>
                     <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                      onClick={() => setStep(3)}
+                      onClick={() => {
+                        for (let i = 0; i < formData.persons.length; i++) {
+                          const p = formData.persons[i];
+                          if (!p.fullName || !p.age || !p.relation) {
+                            return toast.error(`Please fill all compulsory fields (*) for Person ${i + 1}`);
+                          }
+                          if (p.phone && !/^\d{10}$/.test(p.phone)) {
+                            return toast.error(`Phone number for Person ${i + 1} must be exactly 10 digits`);
+                          }
+                          if (p.fullName && /\d/.test(p.fullName)) {
+                            return toast.error(`Full Name for Person ${i + 1} cannot contain numbers`);
+                          }
+                          if (p.relation && /\d/.test(p.relation)) {
+                            return toast.error(`Relation for Person ${i + 1} cannot contain numbers`);
+                          }
+                          if (p.email) {
+                            if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(p.email)) {
+                              return toast.error(`Invalid email format for Person ${i + 1}`);
+                            }
+                          }
+                        }
+                        setStep(3);
+                      }}
                       className="flex-1 py-3 rounded-xl bg-temple-saffron text-white font-bold flex items-center justify-center gap-1 shadow-glowing-orange"
                     >
                       Review <ChevronRight size={16} />
@@ -362,7 +403,10 @@ export default function BookingFlow() {
                   </div>
                   <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex gap-2">
                     <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
-                    <p className="text-xs text-amber-700">Your slot is held for 10 minutes. Complete payment to confirm your booking.</p>
+                    <div className="space-y-1">
+                      <p className="text-xs text-amber-700">Your slot is held for 10 minutes. Complete payment to confirm your booking.</p>
+                      <p className="text-xs text-amber-700 font-bold">* Refund will not be applicable once the payment is completed.</p>
+                    </div>
                   </div>
                   <div className="flex gap-3">
                     <button onClick={() => setStep(2)} className="flex-1 py-3 rounded-xl border border-temple-gold/40 text-temple-brown font-medium flex items-center justify-center gap-1">

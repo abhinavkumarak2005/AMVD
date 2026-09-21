@@ -18,11 +18,11 @@ export default function Footer() {
                 <img src={logoGold} alt="Temple Logo" className="w-full h-full object-contain" />
               </div>
               <span className="font-serif text-base font-bold text-white tracking-wide">
-                Sri Manakula Vinayagar Devasthanam
+                Arulmigu Manakula Vinayagar Devasthanam
               </span>
             </div>
             <p className="text-xs text-white/70 leading-relaxed text-justify">
-              Sri Manakula Vinayagar Temple is one of the most celebrated and historic Ganesha temples
+              Arulmigu Manakula Vinayagar Temple is one of the most celebrated and historic Ganesha temples
               in South India, situated in the coastal town of Puducherry. Believed to have manifested
               over five centuries ago, it serves as a fountainhead of peace, unity, and divine grace.
             </p>
@@ -93,7 +93,7 @@ export default function Footer() {
         </div>
 
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-white/60">
-          <p>© 2026 Sri Manakula Vinayagar Devasthanam. All Rights Reserved. Reg: PY-DHRE-00103</p>
+          <p>© 2026 Arulmigu Manakula Vinayagar Devasthanam. All Rights Reserved. Reg: PY-DHRE-00103</p>
           <div className="flex items-center gap-4">
             <a href="#" className="hover:text-temple-gold transition">Privacy Policy</a>
             <span>•</span>

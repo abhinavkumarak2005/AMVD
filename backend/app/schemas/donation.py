@@ -3,7 +3,7 @@ from typing import Optional
 
 class CreateDonationRequest(BaseModel):
     amount_rupees: int
-    user_id: str
+    user_id: Optional[str] = None
     notes: Optional[str] = None
 
 class CreateDonationResponse(BaseModel):

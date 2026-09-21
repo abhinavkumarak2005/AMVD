@@ -35,6 +35,15 @@ async def cancel_my_donation(
         
     return {"status": "success"}
 
+@router.put("/order/{razorpay_order_id}/cancel")
+async def cancel_donation_by_order(razorpay_order_id: str, db: Connection = Depends(get_db)):
+    async with db.transaction():
+        await db.execute(
+            "UPDATE e_undiyal_transactions SET status = 'cancelled' WHERE razorpay_order_id = $1 AND status = 'initiated'",
+            razorpay_order_id
+        )
+    return {"status": "success"}
+
 @router.post("/create", response_model=CreateDonationResponse)
 async def create_donation(req: CreateDonationRequest, db: Connection = Depends(get_db)):
     async with db.transaction():
@@ -127,7 +136,7 @@ async def verify_donation(req: VerifyDonationRequest, background_tasks: Backgrou
                         asyncio.run(send_email(
                             email_address, 
                             "Thank You for Your Donation", 
-                            f"<h1>Om Sri Manakula Vinayagar!</h1><p>Dear {data['name']}, your generous donation of Rs. {data['amount']} has been received. May Lord Ganesha bless you!</p>",
+                            f"<h1>Arulmigu Manakula Vinayagar Devasthanam</h1><p>Dear {data['name']}, your generous donation of Rs. {data['amount']} has been received. May Lord Ganesha bless you!</p>",
                             pdf_path
                         ))
                         try:

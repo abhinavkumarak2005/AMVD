@@ -46,7 +46,7 @@ function AdminSidebar({ onSignOut, profile, perms }) {
         <div className="flex items-center gap-2.5">
           <img src={logoGold} alt="Temple" className="w-8 h-8 object-contain" />
           <div>
-            <p className="text-xs font-bold text-apple-ink leading-tight">Sri Manakula CMS</p>
+            <p className="text-xs font-bold text-apple-ink leading-tight">Arulmigu Manakula CMS</p>
             <p className="text-[10px] text-apple-muted capitalize">{profile?.role?.replace(/_/g, ' ') || 'Admin'} Portal</p>
           </div>
         </div>
@@ -75,8 +75,10 @@ function AdminSidebar({ onSignOut, profile, perms }) {
 const fadePage = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22,1,0.36,1] } } }
 
 function AdminOverview() {
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
+  const navigate = useNavigate()
+  const today = new Date().toISOString().split('T')[0]
+  const [startDate, setStartDate] = useState(today)
+  const [endDate, setEndDate] = useState(today)
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -107,11 +109,10 @@ function AdminOverview() {
   }, [startDate, endDate])
 
   const kpis = [
-    { label: 'Revenue', value: `₹${data?.revenue || 0}`, icon: IndianRupee, color: 'text-temple-green' },
-    { label: 'Total Bookings', value: data?.bookings || 0, icon: CalendarCheck, color: 'text-temple-saffron' },
-    { label: 'Donations (₹)', value: `₹${data?.total_donations || 0}`, icon: HeartHandshake, color: 'text-temple-gold' },
-    { label: 'Total Donations', value: data?.donations_count || 0, icon: Users, color: 'text-apple-blue' },
-    { label: 'Pending Approvals', value: data?.pending_approvals || 0, icon: Clock, color: 'text-apple-amber' },
+    { label: 'Revenue', value: `₹${data?.revenue || 0}`, icon: IndianRupee, color: 'text-temple-green', path: 'bookings' },
+    { label: 'Total Bookings', value: data?.bookings || 0, icon: CalendarCheck, color: 'text-temple-saffron', path: 'bookings' },
+    { label: 'Donations (₹)', value: `₹${data?.total_donations || 0}`, icon: HeartHandshake, color: 'text-temple-gold', path: 'donations' },
+    { label: 'Total Donations', value: data?.donations_count || 0, icon: Users, color: 'text-apple-blue', path: 'donations' },
   ]
   return (
     <motion.div variants={fadePage} initial="hidden" animate="visible" className="space-y-6">
@@ -134,17 +135,21 @@ function AdminOverview() {
           {(startDate || endDate) && (
             <button 
               onClick={() => { setStartDate(''); setEndDate(''); }} 
-              className="px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 rounded-md font-medium"
+              className="px-3 py-1.5 text-xs text-apple-blue hover:bg-apple-blue/10 rounded-md font-medium transition-colors"
             >
-              Clear
+              Total
             </button>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        {kpis.map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="apple-stat-card">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {kpis.map(({ label, value, icon: Icon, color, path }) => (
+          <div 
+            key={label} 
+            onClick={() => path && navigate(path)}
+            className={`apple-stat-card ${path ? 'cursor-pointer hover:shadow-sm transition-shadow hover:-translate-y-0.5' : ''}`}
+          >
             <div className="flex items-center justify-between mb-1">
               <p className="text-xs text-apple-muted">{label}</p>
               <Icon size={15} className={color} />
@@ -262,7 +267,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-apple-bg font-display">
       <header className="h-14 bg-white border-b border-gray-200 flex items-center px-4 sm:px-6 gap-3 sticky top-0 z-20">
         <img src={logoGold} alt="Temple" className="w-7 h-7 object-contain" />
-        <span className="font-bold text-sm text-apple-ink">Sri Manakula Vinayagar — Admin CMS</span>
+        <span className="font-bold text-sm text-apple-ink">Arulmigu Manakula Vinayagar — Admin CMS</span>
         <div className="flex-1" />
         <span className={`apple-badge ${perms?.all ? 'apple-badge-purple' : 'apple-badge-blue'}`}>
           {profile?.role?.replace(/_/g, ' ') || 'Admin'}

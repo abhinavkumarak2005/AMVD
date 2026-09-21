@@ -56,7 +56,7 @@ export default function AdminLogin() {
           </div>
           <div>
             <h1 className="text-xl font-semibold text-apple-ink">Admin Portal</h1>
-            <p className="text-xs text-apple-muted mt-1">Sri Manakula Vinayagar Devasthanam — CMS</p>
+            <p className="text-xs text-apple-muted mt-1">Arulmigu Manakula Vinayagar Devasthanam — CMS</p>
           </div>
         </div>
 

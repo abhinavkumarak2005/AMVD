@@ -137,7 +137,7 @@ function Overview() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-apple-ink">{act._type === 'booking' ? act.services?.name : act.notes || 'General Donation'}</p>
-                    <p className="text-xs text-apple-muted">{act._type === 'booking' ? `${act.date} • ${act.session}` : new Date(act.created_at).toLocaleDateString()}</p>
+                    <p className="text-xs text-apple-muted">{act._type === 'booking' ? `${act.date} • ${act.session}` : new Date(act.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</p>
                   </div>
                 </div>
                 <div className="text-right flex flex-col items-end">
@@ -231,7 +231,8 @@ function DonationsPage() {
                       {item.status.replace('_', ' ').toUpperCase()}
                     </span>
                   </div>
-                  <p className="text-xs text-apple-muted mt-0.5">{item.notes} • {new Date(item.created_at).toLocaleDateString()}</p>
+                  <p className="text-xs text-apple-muted mt-0.5">Transaction ID: {item.razorpay_payment_id || item.razorpay_order_id || 'N/A'}</p>
+                  <p className="text-xs text-apple-muted mt-0.5">{item.notes} • Paid on: {new Date(item.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</p>
                 </div>
               </div>
               <div className="text-right">
@@ -297,6 +298,12 @@ function BookingsPage() {
     fetchBookings()
   }, [user])
 
+  const handle80gSuccess = (bookingId) => {
+    setBookings(prev => prev.map(b => 
+      b.id === bookingId ? { ...b, tax_exemptions: [{ status: 'pending' }] } : b
+    ))
+  }
+
   const handleCancelBooking = async (bookingId) => {
     try {
       const { data: session } = await supabase.auth.getSession()
@@ -343,7 +350,9 @@ function BookingsPage() {
                       {item.status.replace('_', ' ').toUpperCase()}
                     </span>
                   </div>
-                  <p className="text-xs text-apple-muted mt-0.5">{item.services?.name} • {item.date} ({item.session}) • {item.num_persons} Persons</p>
+                  <p className="text-xs text-apple-muted mt-0.5">Transaction ID: {item.razorpay_payment_id || item.razorpay_order_id || 'N/A'}</p>
+                  <p className="text-xs text-apple-muted mt-0.5">{item.services?.name} • Service Date: {item.date} ({item.session}) • {item.num_persons} Persons</p>
+                  <p className="text-xs text-apple-muted mt-0.5">Booked on: {new Date(item.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</p>
                 </div>
               </div>
               <div className="text-right">
@@ -591,7 +600,7 @@ export default function Dashboard() {
         <div className="flex items-center gap-2">
           <img src={logoGold} alt="Temple" className="w-7 h-7 object-contain" />
           <a href="/" className="font-serif text-sm font-bold text-temple-brown hover:text-temple-saffron transition-colors">
-            Sri Manakula Vinayagar
+            Arulmigu Manakula Vinayagar
           </a>
         </div>
         <div className="flex-1" />

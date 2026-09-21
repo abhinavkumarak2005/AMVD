@@ -12,11 +12,23 @@ export default function BookingsManager() {
   
   const [cancelModal, setCancelModal] = useState({ open: false, id: null, reason: '' })
 
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [phone, setPhone] = useState('')
+
   const fetchBookings = async () => {
     try {
+      setLoading(true)
       const { data: session } = await supabase.auth.getSession()
       const url = new URL(`${import.meta.env.VITE_API_URL}/api/admin/bookings`)
       if (filter !== 'all') url.searchParams.append('status', filter)
+      if (startDate && endDate) {
+        url.searchParams.append('start_date', startDate)
+        url.searchParams.append('end_date', endDate)
+      }
+      if (phone.trim()) {
+        url.searchParams.append('phone', phone.trim())
+      }
       
       const res = await fetch(url.toString(), {
         headers: { 'Authorization': `Bearer ${session?.session?.access_token}` }
@@ -32,8 +44,11 @@ export default function BookingsManager() {
   }
 
   useEffect(() => {
-    fetchBookings()
-  }, [filter])
+    const delayDebounceFn = setTimeout(() => {
+      fetchBookings()
+    }, 500)
+    return () => clearTimeout(delayDebounceFn)
+  }, [filter, startDate, endDate, phone])
 
   const handleStatusUpdate = async (id, status, reason = null) => {
     setActionLoading(id)
@@ -60,15 +75,40 @@ export default function BookingsManager() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h2 className="text-xl font-semibold text-apple-ink">Bookings</h2>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-apple-muted" size={16} />
+            <input 
+              type="text" 
+              placeholder="Search mobile number..."
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+              className="apple-input pl-9 py-1.5 text-sm w-48"
+            />
+          </div>
+          <div className="flex items-center gap-2 text-sm bg-white p-1 rounded-lg border border-gray-100 shadow-sm">
+            <input 
+              type="date" 
+              className="apple-input py-1.5 border-none bg-transparent"
+              value={startDate}
+              onChange={e => setStartDate(e.target.value)}
+            />
+            <span className="text-apple-muted">to</span>
+            <input 
+              type="date" 
+              className="apple-input py-1.5 border-none bg-transparent"
+              value={endDate}
+              onChange={e => setEndDate(e.target.value)}
+            />
+          </div>
           <select 
             className="apple-input text-sm py-1.5"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           >
-            <option value="all">All Bookings</option>
+            <option value="all">All Statuses</option>
             <option value="confirmed">Confirmed</option>
             <option value="pending_payment">Pending Payment</option>
             <option value="cancelled">Cancelled</option>
@@ -99,6 +139,7 @@ export default function BookingsManager() {
                     <td className="px-4 py-3">
                       <div className="font-semibold">{b.reference}</div>
                       <div className="text-xs text-apple-muted">{b.date} • {b.session}</div>
+                      <div className="text-[10px] text-apple-muted mt-1">Paid: {new Date(b.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</div>
                     </td>
                     <td className="px-4 py-3">
                       <div>{b.user_name}</div>
@@ -107,6 +148,7 @@ export default function BookingsManager() {
                     <td className="px-4 py-3">
                       <div>{b.service_name}</div>
                       <div className="font-medium text-temple-green">₹{b.amount_rupees}</div>
+                      {b.razorpay_payment_id && <div className="text-[10px] text-apple-muted mt-1 font-mono">Txn ID: {b.razorpay_payment_id}</div>}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded text-xs font-medium ${

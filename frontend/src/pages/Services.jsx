@@ -19,19 +19,31 @@ export default function Services() {
         if (res.ok) {
           const data = await res.json()
           // Map DB records to catalogue structure
-          const mapped = data.map(s => ({
-            id: s.id,
-            name: s.name,
-            category: s.category,
-            session: s.session_type,
-            maxPersons: s.max_persons,
-            advanceDays: s.advance_days,
-            price: s.price_rupees,
-            icon: '🪔' // default icon since it's not in DB
-          }))
+          const mapped = data.map(s => {
+            // Handle sessions properly - backend returns array of strings
+            let sessionText = 'Any';
+            if (Array.isArray(s.sessions) && s.sessions.length > 0) {
+              sessionText = s.sessions.join(', ');
+            } else if (s.session_type) {
+              sessionText = s.session_type;
+            }
+
+            return {
+              id: s.id,
+              name: s.name,
+              category: s.category || 'General',
+              session: sessionText,
+              maxPersons: s.max_persons || 1,
+              advanceDays: s.advance_days || 1,
+              price: s.price_rupees || 0,
+              icon: '🪔' // default icon since it's not in DB
+            };
+          })
           setCatalogue(mapped)
           const uniqueCats = ['All', ...new Set(mapped.map(s => s.category))]
           setCategories(uniqueCats)
+        } else {
+          console.error("Failed to fetch services: API returned", res.status);
         }
       } catch (e) {
         console.error("Failed to fetch services", e)
@@ -42,12 +54,17 @@ export default function Services() {
     fetchServices()
   }, [])
 
+  // Safely fallback if activeCategory not found in mapped data
   const filtered = activeCategory === 'All' ? catalogue : catalogue.filter((s) => s.category === activeCategory)
 
   const navigate = useNavigate()
 
-  const handleBook = (serviceId) => {
+  const handleBook = (serviceId, serviceName) => {
     if (!session) { openAuthModal('login'); return }
+    if (serviceName && serviceName.toLowerCase().includes('archanai (online)')) {
+      const agreed = window.confirm("By booking this Archanai, you will not be coming to the temple in person, but the temple management will do the Archanai in your name and then will notify you after it has been done.\n\nDo you wish to proceed?");
+      if (!agreed) return;
+    }
     navigate(`/book/${serviceId}`)
   }
 
@@ -63,7 +80,7 @@ export default function Services() {
               Book Your Sacred Service
             </h1>
             <p className="text-temple-tan text-base max-w-2xl mx-auto">
-              Select a service, choose your preferred date, and receive blessings from Lord Sri Manakula Vinayagar.
+              Select a service, choose your preferred date, and receive blessings from Lord Arulmigu Manakula Vinayagar.
             </p>
             <div className="w-24 h-0.5 bg-temple-gold mx-auto" />
           </div>
@@ -117,7 +134,7 @@ export default function Services() {
                   </div>
                 </div>
                 <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                  onClick={() => handleBook(svc.id)}
+                  onClick={() => handleBook(svc.id, svc.name)}
                   className="w-full py-2.5 rounded-xl bg-temple-saffron hover:bg-temple-saffron-hover text-white font-bold text-sm shadow-glowing-orange transition-colors"
                 >
                   Book Now ›

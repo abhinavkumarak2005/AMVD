@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
-import { Phone, Mail, MapPin } from 'lucide-react'
+import { Phone, Mail, MapPin, Lock, Sunrise, Sun, Sunset, Flame, ShieldCheck, Receipt, Landmark, Globe } from 'lucide-react'
 import { useAuthStore, useNoticeStore } from '../store'
 import Header from '../components/layout/Header'
 import Footer from '../components/layout/Footer'
@@ -12,7 +12,7 @@ import imgHero from '../assets/img/September_2023.jpg'
 import imgHero2 from '../assets/img/IMG_7664.jpg'
 import imgServices from '../assets/img/IMG_7700.jpg'
 import imgServices2 from '../assets/img/IMG_7702.jpg'
-import imgEhundi from '../assets/img/IMG_7865.jpg'
+import imgEhundi from '../assets/img/IMG_7714.jpg'
 import imgGallery1 from '../assets/img/IMG_7788.jpg'
 import imgGallery2 from '../assets/img/IMG_7798.jpg'
 import imgGallery3 from '../assets/img/IMG_7800.jpg'
@@ -52,12 +52,19 @@ function EHundiCard() {
   const [selected, setSelected] = useState(1000)
   const [custom, setCustom] = useState('')
   const { session, openAuthModal } = useAuthStore()
+  const navigate = useNavigate()
 
-  const handleDonate = () => {
-    if (!session) { openAuthModal('login'); return }
-    alert('Redirecting to Razorpay...')
-  }
+  const [showAuthOptions, setShowAuthOptions] = useState(false)
+
   const amount = custom ? parseInt(custom) : selected
+
+  const handleDonate = (forceAnonymous = false) => {
+    if (!session && !forceAnonymous && !showAuthOptions) {
+      setShowAuthOptions(true)
+      return
+    }
+    navigate('/donations', { state: { amount, anonymous: forceAnonymous } })
+  }
 
   return (
     <div className="bg-white/95 backdrop-blur rounded-2xl p-6 sm:p-7 shadow-lg border border-temple-gold/40 space-y-5">
@@ -94,12 +101,27 @@ function EHundiCard() {
         />
       </div>
 
-      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={handleDonate}
-        className="w-full py-3.5 px-6 rounded-xl bg-temple-green hover:bg-[#3D491E] text-white font-bold
-                   text-base flex items-center justify-center gap-2 shadow-glowing-green transition-colors"
-      >
-        Donate {amount ? `₹${amount.toLocaleString('en-IN')}` : ''} 🔒
-      </motion.button>
+      {(!session && showAuthOptions) ? (
+        <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => handleDonate(true)}
+            className="w-full py-3.5 px-6 rounded-xl bg-temple-green hover:bg-[#3D491E] text-white font-bold text-sm flex items-center justify-center shadow-glowing-green transition-colors"
+          >
+            Donate Anonymously {amount ? `₹${amount.toLocaleString('en-IN')}` : ''}
+          </motion.button>
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => openAuthModal('login')}
+            className="w-full py-3 px-6 rounded-xl bg-white border border-temple-gold/70 text-temple-brown hover:bg-temple-cream font-semibold text-sm transition-colors"
+          >
+            Login to track your offering
+          </motion.button>
+        </div>
+      ) : (
+        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => handleDonate(false)}
+          className="w-full py-3.5 px-6 rounded-xl bg-temple-green hover:bg-[#3D491E] text-white font-bold
+                     text-base flex items-center justify-center gap-2 shadow-glowing-green transition-colors"
+        >
+          Donate {amount ? `₹${amount.toLocaleString('en-IN')}` : ''} <Lock size={16} className="ml-1 opacity-90" />
+        </motion.button>
+      )}
 
       <div className="pt-2 text-center border-t border-temple-gold/20 space-y-1.5">
         <p className="text-[11px] font-medium text-temple-tan tracking-wide">
@@ -155,7 +177,7 @@ export default function Landing() {
         if (res.ok) {
           const data = await res.json()
           setServices(data.slice(0, 4).map(s => ({
-            icon: '🪔',
+            icon: <Flame size={28} className="text-temple-saffron drop-shadow-sm" />,
             title: s.name,
             desc: `Book a ${s.category} session. Price starts at ₹${s.price_rupees}.`,
             cta: 'Book Now',
@@ -221,7 +243,7 @@ export default function Landing() {
                 </ScrollReveal>
                 <ScrollReveal delay={0.1}>
                   <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-temple-brown leading-tight">
-                    Sri Manakula<br className="hidden sm:inline" /> Vinayagar Devasthanam
+                    Arulmigu Manakula<br className="hidden sm:inline" /> Vinayagar Devasthanam
                   </h1>
                 </ScrollReveal>
                 <ScrollReveal delay={0.2}>
@@ -258,22 +280,12 @@ export default function Landing() {
                     <div className="relative rounded-2xl overflow-hidden bg-[#241A13] border-2 border-temple-gold/40">
                       <img
                         src={logoGold}
-                        alt="Sri Manakula Vinayagar — Moolavar Deity"
+                        alt="Arulmigu Manakula Vinayagar — Moolavar Deity"
                         className="w-full h-auto object-cover object-top"
                         loading="eager"
                       />
                       <div className="absolute inset-0 pointer-events-none ring-1 ring-inset ring-amber-300/30" />
                     </div>
-                  </motion.div>
-                  {/* Floating badge */}
-                  <motion.div
-                    animate={{ y: [0, -4, 0] }}
-                    transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-                    className="absolute -bottom-5 left-4 bg-temple-cream/90 backdrop-blur border border-temple-gold/40
-                               rounded-full px-4 py-1.5 shadow-md flex items-center gap-2"
-                  >
-                    <span className="text-amber-500 animate-pulse text-sm">🪔</span>
-                    <span className="text-xs font-semibold tracking-wide text-temple-brown">Nithya Pooja Darshan</span>
                   </motion.div>
                 </div>
               </ScrollReveal>
@@ -294,15 +306,12 @@ export default function Landing() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center relative">
                   {/* Deity Portrait — real temple photo */}
                   <div className="lg:col-span-4 flex flex-col items-center justify-center">
-                    <div className="relative w-64 h-80 sm:w-72 sm:h-96 rounded-2xl overflow-hidden p-2
-                                    bg-gradient-to-tr from-temple-gold to-amber-200 shadow-lg filigree-border">
-                      <div className="w-full h-full bg-[#3b2a1a] rounded-xl overflow-hidden">
-                        <img
-                          src={imgEhundi}
-                          alt="Sri Manakula Vinayagar Temple — Procession"
-                          className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-500"
-                        />
-                      </div>
+                    <div className="relative w-64 h-80 sm:w-72 sm:h-96 rounded-2xl overflow-hidden border-2 border-temple-gold/40 shadow-sm">
+                      <img
+                        src={imgEhundi}
+                        alt="Arulmigu Manakula Vinayagar Temple — Procession"
+                        className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-500"
+                      />
                     </div>
                     <p className="mt-3 font-serif text-sm font-semibold tracking-wide text-temple-brown text-center">
                       Maha Ganapathi Anugraha
@@ -330,10 +339,10 @@ export default function Landing() {
                     </p>
                     <div className="grid grid-cols-2 gap-3 pt-2">
                       {[
-                        { icon: '🛡️', title: 'Secure & Trusted', sub: 'Official Gateway' },
-                        { icon: '📜', title: 'Instant Receipt', sub: 'Tax Exemption 80G' },
-                        { icon: '🛕', title: 'Temple Activities', sub: 'Annadhanam & Seva' },
-                        { icon: '🌍', title: 'Serve Anywhere', sub: 'Global Devotees' },
+                        { icon: <ShieldCheck size={18} className="text-temple-saffron" />, title: 'Secure & Trusted', sub: 'Official Gateway' },
+                        { icon: <Receipt size={18} className="text-temple-saffron" />, title: 'Instant Receipt', sub: 'Tax Exemption 80G' },
+                        { icon: <Landmark size={18} className="text-temple-saffron" />, title: 'Temple Activities', sub: 'Annadhanam & Seva' },
+                        { icon: <Globe size={18} className="text-temple-saffron" />, title: 'Serve Anywhere', sub: 'Global Devotees' },
                       ].map(({ icon, title, sub }) => (
                         <div key={title} className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white/70 border border-temple-gold/30 shadow-xs">
                           <div className="w-9 h-9 rounded-full bg-temple-gold/20 flex items-center justify-center text-lg shrink-0">{icon}</div>
@@ -378,7 +387,7 @@ export default function Landing() {
                 </div>
                 <div className="lg:col-span-5 space-y-4">
                   <h3 className="font-serif text-2xl font-bold text-temple-brown">
-                    Sri Manakula Vinayagar <span className="font-normal text-temple-tan text-lg">Devasthanam</span>
+                    Arulmigu Manakula Vinayagar <span className="font-normal text-temple-tan text-lg">Devasthanam</span>
                   </h3>
                   <p className="text-temple-tan text-sm leading-relaxed">
                     Every day at the shrine is marked with sacred rituals following centuries-old Agama Shastra traditions.
@@ -451,8 +460,10 @@ export default function Landing() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               {TIMINGS.map((t, i) => (
                 <ScrollReveal key={t.session} delay={i * 0.1}>
-                  <div className="bg-gradient-to-b from-[#FAF0E1] to-[#F4E3CB] rounded-2xl p-6 border border-temple-gold/50 text-center space-y-3 hover:shadow-sacred transition-shadow">
-                    <div className="text-3xl">{i === 0 ? '🌅' : i === 1 ? '🌞' : '🌆'}</div>
+                  <div className="bg-[#F5E8D6] rounded-xl p-6 border border-temple-gold/30 text-center space-y-3 shadow-sm hover:shadow-md transition-shadow h-full flex flex-col justify-center items-center">
+                    <div className="text-temple-saffron mb-2">
+                      {i === 0 ? <Sunrise size={36} strokeWidth={1.5} /> : i === 1 ? <Sun size={36} strokeWidth={1.5} /> : <Sunset size={36} strokeWidth={1.5} />}
+                    </div>
                     <h3 className="font-serif text-lg font-bold text-temple-brown">{t.session}</h3>
                     <p className="font-bold text-temple-saffron text-base">{t.time}</p>
                     <p className="text-xs text-temple-tan leading-relaxed">{t.note}</p>
@@ -489,39 +500,17 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* ── Quick Donation Strip ──────────────────────────────────────── */}
-        <section className="py-12 lg:py-16 bg-[#FDF8F0] border-t border-temple-gold/30">
+        {/* ── Blog Section ──────────────────────────────────────── */}
+        <section className="py-12 lg:py-16 bg-[#FDF8F0] border-t border-temple-gold/30" id="blog">
           <div className="max-w-7xl mx-auto px-4 sm:px-8 space-y-8">
             <ScrollReveal className="text-center space-y-2">
-              <div className="text-temple-saffron font-script text-3xl">Support The Temple</div>
+              <div className="text-temple-saffron font-script text-3xl">Spiritual Teachings</div>
               <h2 className="font-serif text-2xl sm:text-3xl font-bold text-temple-brown">
-                Help Support the Temple and Its Activities
+                Blog
               </h2>
             </ScrollReveal>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              <ScrollReveal className="lg:col-span-7 bg-temple-cream/60 rounded-3xl p-6 sm:p-8 border border-temple-gold/50 space-y-5" delay={0.1}>
-                <QuickDonationStrip />
-              </ScrollReveal>
-
-              <ScrollReveal className="lg:col-span-5" delay={0.2}>
-                <div className="bg-white rounded-3xl p-6 border border-temple-gold/50 shadow-md flex flex-col sm:flex-row items-center gap-6">
-                  <div className="w-32 h-32 p-2 bg-white rounded-xl border border-dashed border-temple-gold flex items-center justify-center shrink-0">
-                    <QRPlaceholder />
-                  </div>
-                  <div className="space-y-2 text-center sm:text-left">
-                    <h3 className="font-serif text-lg font-bold text-temple-brown">Scan & Donate</h3>
-                    <p className="text-xs text-temple-tan leading-tight">
-                      Scan using any UPI App (GPay, PhonePe, Paytm, BHIM) for instant seva contribution.
-                    </p>
-                    <div className="flex items-center justify-center sm:justify-start gap-2 pt-1 flex-wrap">
-                      {['GPay', 'PhonePe', 'Paytm', 'BHIM'].map((app) => (
-                        <span key={app} className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-gray-50 text-gray-700 border border-gray-200">{app}</span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </ScrollReveal>
+            <div className="text-center text-temple-tan py-12">
+              Coming soon.
             </div>
           </div>
         </section>
@@ -537,10 +526,17 @@ function QuickDonationStrip() {
   const [selected, setSelected] = useState(1000)
   const [custom, setCustom] = useState('')
   const { session, openAuthModal } = useAuthStore()
+  const navigate = useNavigate()
 
-  const handleDonate = () => {
-    if (!session) { openAuthModal('login'); return }
-    alert('Redirecting to payment...')
+  const [showAuthOptions, setShowAuthOptions] = useState(false)
+
+  const handleDonate = (forceAnonymous = false) => {
+    if (!session && !forceAnonymous && !showAuthOptions) {
+      setShowAuthOptions(true)
+      return
+    }
+    const finalAmount = custom || selected
+    navigate('/donations', { state: { amount: finalAmount, anonymous: forceAnonymous } })
   }
 
   return (
@@ -564,11 +560,26 @@ function QuickDonationStrip() {
             className="w-full pl-7 pr-3 py-2 rounded-xl border border-temple-gold/70 bg-white text-xs sm:text-sm focus:ring-1 focus:ring-temple-saffron"
           />
         </div>
-        <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={handleDonate}
-          className="px-6 py-2.5 rounded-xl bg-temple-saffron hover:bg-temple-saffron-hover text-white text-xs sm:text-sm font-bold shadow-glowing-orange shrink-0"
-        >
-          Donate Now ➜
-        </motion.button>
+        {(!session && showAuthOptions) ? (
+          <div className="flex flex-col sm:flex-row gap-2 shrink-0 animate-in fade-in slide-in-from-right-2 duration-200">
+            <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => handleDonate(true)}
+              className="px-4 py-2.5 rounded-xl bg-temple-saffron hover:bg-temple-saffron-hover text-white text-xs sm:text-sm font-bold shadow-glowing-orange"
+            >
+              Donate Anonymously
+            </motion.button>
+            <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => openAuthModal('login')}
+              className="px-4 py-2.5 rounded-xl bg-white border border-temple-gold/70 text-temple-brown hover:bg-temple-cream text-xs sm:text-sm font-semibold"
+            >
+              Login to track
+            </motion.button>
+          </div>
+        ) : (
+          <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => handleDonate(false)}
+            className="px-6 py-2.5 rounded-xl bg-temple-saffron hover:bg-temple-saffron-hover text-white text-xs sm:text-sm font-bold shadow-glowing-orange shrink-0"
+          >
+            Donate Now ➜
+          </motion.button>
+        )}
       </div>
       <p className="text-[11px] text-temple-tan leading-relaxed">
         Official Devasthanam Registration: PY-DHRE-00103. Donations may be eligible for income tax exemption under Section 80G.

@@ -54,7 +54,7 @@ def generate_receipt_pdf(receipt_data: dict) -> str:
     elements = []
     
     # 1. Header
-    elements.append(Paragraph("Sri Manakula Vinayagar Devasthanam", title_style))
+    elements.append(Paragraph("Arulmigu Manakula Vinayagar Devasthanam", title_style))
     elements.append(Paragraph("Puducherry - 605001", subtitle_style))
     elements.append(Spacer(1, 10))
     

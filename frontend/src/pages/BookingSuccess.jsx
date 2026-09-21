@@ -37,7 +37,7 @@ export default function BookingSuccess() {
             <div className="flex items-center gap-3 justify-center border border-temple-gold/30 rounded-xl p-3 bg-temple-cream/30">
               <img src={logoBlack} alt="Temple Logo" className="w-10 h-10 object-contain" />
               <div className="text-center">
-                <p className="text-xs font-bold text-temple-brown">Sri Manakula Vinayagar Devasthanam</p>
+                <p className="text-xs font-bold text-temple-brown">Arulmigu Manakula Vinayagar Devasthanam</p>
                 <p className="text-[10px] text-temple-tan">Official Booking Receipt</p>
               </div>
             </div>
@@ -49,7 +49,7 @@ export default function BookingSuccess() {
 
             <div className="bg-temple-cream/50 rounded-xl p-4 text-center border border-temple-gold/20">
               <p className="text-sm text-temple-tan leading-relaxed">
-                🙏 May Lord Sri Manakula Vinayagar shower his blessings upon you and your family.
+                🙏 May Lord Arulmigu Manakula Vinayagar shower his blessings upon you and your family.
                 A confirmation has been sent to your email.
               </p>
             </div>

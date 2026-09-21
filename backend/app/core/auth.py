@@ -36,7 +36,11 @@ async def get_user_permissions(user_id: str, db: Connection) -> dict:
 def require_permission(perm: str):
     async def permission_checker(user_id: str = Depends(get_current_user), db: Connection = Depends(get_db)):
         perms = await get_user_permissions(user_id, db)
-        if not perms.get(perm) and not perms.get('all'):
+        has_perm = perms.get(perm) or perms.get('all')
+        if not has_perm and perm.startswith('view_'):
+            has_perm = perms.get(perm.replace('view_', 'manage_'))
+            
+        if not has_perm:
             raise HTTPException(status_code=403, detail="Not authorized")
         return user_id
     return permission_checker

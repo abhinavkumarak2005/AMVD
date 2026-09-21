@@ -70,6 +70,29 @@ async def get_availability(service_id: str, date: str, db: Connection = Depends(
         # Fully blocked, return -1 to indicate explicitly blocked
         return {s: -1 for s in sessions}
 
+    # Check mutually exclusive conflicts
+    conflicts = await db.fetchrow(
+        """
+        SELECT 1 FROM bookings b
+        JOIN conflict_rules cr ON 
+            (cr.service_a_id = $1 AND cr.service_b_id = b.service_id) OR
+            (cr.service_b_id = $1 AND cr.service_a_id = b.service_id)
+        WHERE b.date = $2 AND b.status IN ('confirmed', 'pending_payment') 
+          AND cr.rule_type = 'mutual_exclusive' AND cr.is_active = true
+        UNION
+        SELECT 1 FROM booking_holds bh
+        JOIN conflict_rules cr ON 
+            (cr.service_a_id = $1 AND cr.service_b_id = bh.service_id) OR
+            (cr.service_b_id = $1 AND cr.service_a_id = bh.service_id)
+        WHERE bh.date = $2 AND bh.is_released = false AND bh.expires_at > NOW()
+          AND cr.rule_type = 'mutual_exclusive' AND cr.is_active = true
+        LIMIT 1
+        """,
+        service_id, parsed_date
+    )
+    if conflicts:
+        return {s: -1 for s in sessions}
+
     # Fetch existing slots for this date and service
     slots = await db.fetch("SELECT session, total_capacity, confirmed_count, pending_count FROM slot_inventory WHERE service_id = $1 AND date = $2", service_id, parsed_date)
     
@@ -116,6 +139,29 @@ async def hold_slot(req: HoldRequest, db: Connection = Depends(get_db)):
     blocked_ids = [str(uid) for uid in (block['blocked_service_ids'] or [])] if block else []
     if block and (block['status'] == 'blocked' or (block['status'] == 'partial' and req.service_id in blocked_ids)):
         raise HTTPException(status_code=400, detail="This date is blocked for bookings.")
+
+    # check mutually exclusive conflicts
+    conflicts = await db.fetchrow(
+        """
+        SELECT 1 FROM bookings b
+        JOIN conflict_rules cr ON 
+            (cr.service_a_id = $1 AND cr.service_b_id = b.service_id) OR
+            (cr.service_b_id = $1 AND cr.service_a_id = b.service_id)
+        WHERE b.date = $2 AND b.status IN ('confirmed', 'pending_payment') 
+          AND cr.rule_type = 'mutual_exclusive' AND cr.is_active = true
+        UNION
+        SELECT 1 FROM booking_holds bh
+        JOIN conflict_rules cr ON 
+            (cr.service_a_id = $1 AND cr.service_b_id = bh.service_id) OR
+            (cr.service_b_id = $1 AND cr.service_a_id = bh.service_id)
+        WHERE bh.date = $2 AND bh.is_released = false AND bh.expires_at > NOW()
+          AND cr.rule_type = 'mutual_exclusive' AND cr.is_active = true
+        LIMIT 1
+        """,
+        req.service_id, req.date
+    )
+    if conflicts:
+        raise HTTPException(status_code=400, detail="This date is blocked due to a conflicting booking.")
 
     async with db.transaction():
         # First, find the slot and lock it
@@ -354,7 +400,7 @@ async def verify_booking(req: VerifyBookingRequest, background_tasks: Background
                             asyncio.run(send_email(
                                 email_address, 
                                 "Your Pooja Booking Receipt", 
-                                f"<h1>Om Sri Manakula Vinayagar!</h1><p>Dear {data['name']}, your booking is confirmed. Please find your receipt attached.</p>",
+                                f"<h1>Arulmigu Manakula Vinayagar Devasthanam</h1><p>Dear {data['name']}, your booking is confirmed. Please find your receipt attached.</p>",
                                 pdf_path
                             ))
                             try:
@@ -478,7 +524,7 @@ async def razorpay_webhook(request: Request, background_tasks: BackgroundTasks, 
                                     asyncio.run(send_email(
                                         email_address, 
                                         "Your Pooja Booking Receipt", 
-                                        f"<h1>Om Sri Manakula Vinayagar!</h1><p>Dear {data['name']}, your booking is confirmed. Please find your receipt attached.</p>",
+                                        f"<h1>Arulmigu Manakula Vinayagar Devasthanam</h1><p>Dear {data['name']}, your booking is confirmed. Please find your receipt attached.</p>",
                                         pdf_path
                                     ))
                                     try:
@@ -525,7 +571,7 @@ async def razorpay_webhook(request: Request, background_tasks: BackgroundTasks, 
                                     asyncio.run(send_email(
                                         email_address, 
                                         "Thank You for Your Donation", 
-                                        f"<h1>Om Sri Manakula Vinayagar!</h1><p>Dear {data['name']}, your generous donation of Rs. {data['amount']} has been received. May Lord Ganesha bless you!</p>",
+                                        f"<h1>Arulmigu Manakula Vinayagar Devasthanam</h1><p>Dear {data['name']}, your generous donation of Rs. {data['amount']} has been received. May Lord Ganesha bless you!</p>",
                                         pdf_path
                                     ))
                                     try:

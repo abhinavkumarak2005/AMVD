@@ -147,7 +147,7 @@ export default function DonationsManager() {
                   <tr key={d.id} className="hover:bg-gray-50/50 align-top">
                     <td className="px-4 py-3">
                       <div className="font-semibold">{d.reference}</div>
-                      <div className="text-xs text-apple-muted mt-1">{new Date(d.created_at).toLocaleDateString()}</div>
+                      <div className="text-[10px] text-apple-muted mt-1">{new Date(d.created_at).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="font-medium">{d.user_name}</div>
@@ -155,7 +155,8 @@ export default function DonationsManager() {
                       <div className="text-xs text-apple-muted">{d.user_phone}</div>
                     </td>
                     <td className="px-4 py-3 font-medium text-temple-green">
-                      ₹{d.amount_rupees}
+                      <div>₹{d.amount_rupees}</div>
+                      {d.razorpay_payment_id && <div className="text-[10px] text-apple-muted mt-1 font-mono font-normal leading-tight">Txn ID: {d.razorpay_payment_id}</div>}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 text-xs rounded-full font-medium ${
