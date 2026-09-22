@@ -196,7 +196,7 @@ export default function BookingFlow() {
               razorpay_signature: response.razorpay_signature
             })
             setIsBooked(true)
-            toast.success('Payment successful! 🙏')
+            toast.success('Payment successful!')
             
             if (data.amount_rupees >= exemptionLimit && res.data.id) {
               setTxDetails({ id: res.data.id, reference: res.data.reference, amount_rupees: data.amount_rupees })

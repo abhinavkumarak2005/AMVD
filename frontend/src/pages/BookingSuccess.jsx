@@ -28,7 +28,7 @@ export default function BookingSuccess() {
               <CheckCircle2 size={40} className="text-white" />
             </motion.div>
             <h1 className="font-serif text-2xl font-bold">Booking Confirmed!</h1>
-            <p className="text-white/80 text-sm mt-1">Your seva has been successfully registered 🙏</p>
+            <p className="text-white/80 text-sm mt-1">Your seva has been successfully registered</p>
           </div>
 
           {/* Body */}
@@ -49,7 +49,7 @@ export default function BookingSuccess() {
 
             <div className="bg-temple-cream/50 rounded-xl p-4 text-center border border-temple-gold/20">
               <p className="text-sm text-temple-tan leading-relaxed">
-                🙏 May Lord Arulmigu Manakula Vinayagar shower his blessings upon you and your family.
+                May Lord Arulmigu Manakula Vinayagar shower his blessings upon you and your family.
                 A confirmation has been sent to your email.
               </p>
             </div>

@@ -74,7 +74,7 @@ export default function AuthModal() {
         type: 'signup'
       })
       if (error) throw error
-      toast.success('Email verified! Welcome 🙏')
+      toast.success('Email verified! Welcome')
       closeAuthModal()
     } catch (err) {
       toast.error(err.message || 'Verification failed')
@@ -100,7 +100,7 @@ export default function AuthModal() {
         }
         throw error
       }
-      toast.success('Welcome back! 🙏')
+      toast.success('Welcome back!')
       closeAuthModal()
     } catch (err) {
       toast.error(err.message || 'Login failed')
@@ -181,7 +181,7 @@ export default function AuthModal() {
                   <div className="text-center mt-2 space-y-3">
                     <p className="text-[10px] text-temple-tan leading-tight">
                       Don't see the email? Please check your <strong>SPAM folder</strong>. <br/>
-                      If you find it there, please mark it as "Not Spam" to help other devotees receive Lord Vinayagar's grace. 🙏
+                      If you find it there, please mark it as "Not Spam" to help other devotees receive Lord Vinayagar's grace.
                     </p>
                     <button type="button" onClick={() => setMode('signup')} className="text-temple-saffron text-sm font-medium hover:underline">
                       Back to Sign Up
@@ -194,14 +194,14 @@ export default function AuthModal() {
                   <Field label="Phone Number" type="tel" placeholder="+91 98765 43210" value={form.phone} onChange={setField('phone')} required />
                   <Field label="Email Address" type="email" placeholder="you@example.com" value={form.email} onChange={setField('email')} required />
                   <PassField value={form.password} onChange={setField('password')} show={showPass} toggle={() => setShowPass(s => !s)} />
-                  <SubmitBtn loading={loading} label="Create Account 🙏" />
+                  <SubmitBtn loading={loading} label="Create Account" />
                   <p className="text-[10px] text-center text-temple-tan">By signing up, you agree to our Terms & Privacy Policy.</p>
                 </form>
               ) : (
                 <form onSubmit={handleLogin} className="space-y-4">
                   <Field label="Email Address" type="email" placeholder="you@example.com" value={form.email} onChange={setField('email')} required />
                   <PassField value={form.password} onChange={setField('password')} show={showPass} toggle={() => setShowPass(s => !s)} />
-                  <SubmitBtn loading={loading} label="Log In 🙏" />
+                  <SubmitBtn loading={loading} label="Log In" />
                   <p className="text-center text-xs text-temple-tan">
                     Don't have an account?{' '}
                     <button type="button" onClick={() => setMode('signup')} className="text-temple-saffron font-semibold hover:underline">Sign Up</button>

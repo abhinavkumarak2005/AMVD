@@ -146,7 +146,7 @@ export default function Services() {
 
           {/* Info note */}
           <p className="text-center text-xs text-temple-tan bg-white/60 rounded-xl border border-temple-gold/30 p-3 max-w-2xl mx-auto">
-            🙏 All service prices are default seva amounts. Booking is confirmed only after payment.
+            All service prices are default seva amounts. Booking is confirmed only after payment.
             For queries, call <span className="font-semibold text-temple-brown">+91 12345 67890</span>.
           </p>
         </div>

@@ -33,7 +33,7 @@ export default function AdminLogin() {
         await supabase.auth.signOut()
         throw new Error('Access denied. You do not have admin privileges.')
       }
-      toast.success('Welcome to CMS 🙏')
+      toast.success('Welcome to CMS')
       navigate('/admin')
     } catch (err) {
       toast.error(err.message || 'Login failed')

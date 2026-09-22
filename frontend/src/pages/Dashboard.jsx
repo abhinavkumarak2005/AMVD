@@ -101,7 +101,7 @@ function Overview() {
 
   return (
     <motion.div variants={fadePage} initial="hidden" animate="visible" className="space-y-6">
-      <h2 className="text-xl font-semibold text-apple-ink">Welcome back 🙏</h2>
+      <h2 className="text-xl font-semibold text-apple-ink">Welcome back</h2>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { label: 'Total Bookings', value: loading ? '...' : stats.bookings.toString(), color: 'text-temple-saffron', icon: CalendarDays },
@@ -551,7 +551,7 @@ function SettingsPage() {
       if (dbErr) throw dbErr
 
       await fetchProfile(user.id)
-      toast.success('Profile updated successfully! 🙏')
+      toast.success('Profile updated successfully!')
     } catch (err) {
       toast.error(err.message || 'Failed to update profile')
     } finally {

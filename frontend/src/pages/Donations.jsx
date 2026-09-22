@@ -80,7 +80,7 @@ export default function Donations() {
               razorpay_signature: response.razorpay_signature
             })
             
-            toast.success('Thank you for your generous offering! 🙏')
+            toast.success('Thank you for your generous offering!')
             
             if (finalAmount >= exemptionLimit && res.data.id) {
               setTxDetails({ id: res.data.id, reference: res.data.reference, amount_rupees: finalAmount })
@@ -95,7 +95,7 @@ export default function Donations() {
             }
           } catch(e) {
             console.error("Verify failed", e)
-            toast.success('Thank you for your generous offering! 🙏')
+            toast.success('Thank you for your generous offering!')
             if (session?.user) navigate('/dashboard/receipts')
           }
         },
