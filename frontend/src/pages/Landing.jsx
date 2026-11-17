@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
-import { Phone, Mail, MapPin, Lock, Sunrise, Sun, Sunset, Flame, ShieldCheck, Receipt, Landmark, Globe } from 'lucide-react'
+import { Phone, Mail, MapPin, Lock, Sunrise, Sun, Sunset, Flame, ShieldCheck, Receipt, Landmark, Globe, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useAuthStore, useNoticeStore } from '../store'
 import Header from '../components/layout/Header'
 import Footer from '../components/layout/Footer'
@@ -167,6 +167,17 @@ const TIMINGS = [
 export default function Landing() {
   const { fetchNotices } = useNoticeStore()
   const [services, setServices] = useState([])
+  const scrollContainerRef = useRef(null)
+
+  const scrollServices = (direction) => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = 320
+      scrollContainerRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      })
+    }
+  }
 
   useEffect(() => { 
     fetchNotices() 
@@ -176,13 +187,15 @@ export default function Landing() {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/api/bookings/services`)
         if (res.ok) {
           const data = await res.json()
-          setServices(data.slice(0, 4).map(s => ({
+          setServices(data.map(s => ({
+            id: s.id,
             icon: <Flame size={28} className="text-temple-saffron drop-shadow-sm" />,
             title: s.name,
-            desc: `Book a ${s.category} session. Price starts at ₹${s.price_rupees}.`,
+            category: s.category || 'Pooja',
+            desc: `Book a ${s.category || 'sacred'} seva. Seva amount: ₹${s.price_rupees}.`,
             cta: 'Book Now',
-            href: '/services',
-            featured: false
+            href: `/book/${s.id}`,
+            featured: s.name.toLowerCase().includes('annadhanam') || s.name.toLowerCase().includes('gold')
           })))
         }
       } catch (e) {
@@ -409,32 +422,63 @@ export default function Landing() {
               </div>
             </ScrollReveal>
 
-            {/* 4 Service Cards */}
-            <motion.div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-4"
-              initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} variants={stagger}
+            {/* Services Manual Scroll Header & Controls */}
+            <div className="flex items-center justify-between pt-2">
+              <span className="text-xs font-semibold text-temple-tan uppercase tracking-wider">
+                Browse Temple Sevas ({services.length})
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => scrollServices('left')}
+                  title="Scroll Left"
+                  className="w-9 h-9 rounded-full bg-white border border-temple-gold/50 shadow-xs flex items-center justify-center text-temple-brown hover:bg-temple-saffron hover:text-white transition-all active:scale-95"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  onClick={() => scrollServices('right')}
+                  title="Scroll Right"
+                  className="w-9 h-9 rounded-full bg-white border border-temple-gold/50 shadow-xs flex items-center justify-center text-temple-brown hover:bg-temple-saffron hover:text-white transition-all active:scale-95"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Service Cards with Left & Right Manual Scroll */}
+            <div
+              ref={scrollContainerRef}
+              className="flex gap-6 overflow-x-auto pb-4 pt-2 no-scrollbar scroll-smooth"
+              style={{ scrollSnapType: 'x mandatory' }}
             >
               {services.map((svc) => (
-                <motion.div key={svc.title} variants={fadeUp}
-                  className={`relative bg-white rounded-2xl p-6 border transition-all flex flex-col justify-between text-center space-y-4
+                <div
+                  key={svc.id || svc.title}
+                  style={{ scrollSnapAlign: 'start' }}
+                  className={`relative shrink-0 w-72 sm:w-80 bg-white rounded-2xl p-6 border transition-all flex flex-col justify-between text-center space-y-4
                     ${svc.featured
-                      ? 'border-2 border-temple-green shadow-sacred sm:-translate-y-2 ring-2 ring-temple-gold/30'
+                      ? 'border-2 border-temple-green shadow-sacred ring-2 ring-temple-gold/30'
                       : 'border-temple-gold/40 shadow-sm hover:shadow-md hover:-translate-y-1'
                     }`}
                 >
                   {svc.featured && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full
                                     bg-gradient-to-r from-temple-saffron to-amber-500 text-white text-[10px] font-extrabold uppercase tracking-wider shadow-sm">
-                      Most Popular
+                      Popular Seva
                     </div>
                   )}
                   <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl shadow-inner mt-1
                     ${svc.featured ? 'bg-[#EBF0DC] border border-temple-green/50' : 'bg-temple-cream border border-temple-gold/60'}`}>
                     {svc.icon}
                   </div>
-                  <div className="space-y-2">
-                    <h4 className={`font-serif text-xl font-bold ${svc.featured ? 'text-temple-green' : 'text-temple-brown'}`}>{svc.title}</h4>
-                    <p className="text-xs text-temple-tan leading-relaxed">{svc.desc}</p>
+                  <div className="space-y-1.5 flex-1 flex flex-col justify-center">
+                    <span className="text-[11px] font-semibold text-temple-olive bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/40 inline-block mx-auto">
+                      {svc.category}
+                    </span>
+                    <h4 className={`font-serif text-lg font-bold line-clamp-1 ${svc.featured ? 'text-temple-green' : 'text-temple-brown'}`}>
+                      {svc.title}
+                    </h4>
+                    <p className="text-xs text-temple-tan leading-relaxed line-clamp-2">{svc.desc}</p>
                   </div>
                   <Link to={svc.href}
                     className={`btn-bounce inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-full text-white text-xs font-bold shadow-sm
@@ -442,9 +486,9 @@ export default function Landing() {
                   >
                     <span>{svc.cta}</span> <span>›</span>
                   </Link>
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
           </div>
         </section>
 

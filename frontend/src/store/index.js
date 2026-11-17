@@ -30,7 +30,7 @@ export const useAuthStore = create((set, get) => ({
 
     set({ session, user: session?.user ?? null, isLoading: false })
     
-    supabase.auth.onAuthStateChange(async (_event, session) => {
+    supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user?.last_sign_in_at) {
         const lastSignIn = new Date(session.user.last_sign_in_at).getTime()
         if (Date.now() - lastSignIn > 24 * 60 * 60 * 1000) {
@@ -42,6 +42,21 @@ export const useAuthStore = create((set, get) => ({
       
       if (session?.user) {
         await get().fetchProfile(session.user.id)
+        if (event === 'SIGNED_IN') {
+          try {
+            fetch(`${import.meta.env.VITE_API_URL}/api/admin/audit-logs/activity`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action_type: 'LOGIN',
+                user_id: session.user.id,
+                user_name: session.user.user_metadata?.full_name || session.user.email,
+                user_role: 'devotee',
+                page_url: '/login'
+              })
+            }).catch(() => {})
+          } catch (e) {}
+        }
       } else {
         set({ profile: null })
       }
@@ -63,6 +78,22 @@ export const useAuthStore = create((set, get) => ({
   closeAuthModal: () => set({ authModalOpen: false }),
 
   signOut: async () => {
+    const currentUser = get().user
+    if (currentUser) {
+      try {
+        fetch(`${import.meta.env.VITE_API_URL}/api/admin/audit-logs/activity`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action_type: 'LOGOUT',
+            user_id: currentUser.id,
+            user_name: currentUser.user_metadata?.full_name || currentUser.email,
+            user_role: 'devotee',
+            page_url: '/logout'
+          })
+        }).catch(() => {})
+      } catch (e) {}
+    }
     await supabase.auth.signOut()
     set({ session: null, user: null, profile: null })
   },

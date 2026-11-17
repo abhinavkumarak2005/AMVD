@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { useAuthStore } from './store'
 
@@ -13,6 +13,32 @@ import AdminLogin from './pages/AdminLogin'
 import AuthModal from './components/layout/AuthModal'
 import NoticeBanner from './components/layout/NoticeBanner'
 import Donations from './pages/Donations'
+
+function ActivityTracker() {
+  const location = useLocation()
+  const { session, profile } = useAuthStore()
+
+  useEffect(() => {
+    // Only track public/devotee routes or logins
+    if (location.pathname.startsWith('/admin')) return
+
+    try {
+      fetch(`${import.meta.env.VITE_API_URL}/api/admin/audit-logs/activity`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action_type: 'PAGE_VISIT',
+          page_url: location.pathname,
+          user_id: session?.user?.id || null,
+          user_name: profile?.full_name || session?.user?.email || 'Visitor',
+          user_role: profile?.role || 'devotee'
+        })
+      }).catch(() => {})
+    } catch (e) {}
+  }, [location.pathname, session?.user?.id])
+
+  return null
+}
 
 function PrivateRoute({ children }) {
   const { session, isLoading } = useAuthStore()
@@ -35,6 +61,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <ActivityTracker />
       <NoticeBanner />
       <AuthModal />
       <Toaster position="top-right" richColors expand />

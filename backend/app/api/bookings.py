@@ -107,6 +107,81 @@ async def get_availability(service_id: str, date: str, db: Connection = Depends(
             
     return res
 
+@router.get("/month-availability")
+async def get_month_availability(
+    service_id: str,
+    year: int,
+    month: int,
+    db: Connection = Depends(get_db)
+):
+    import calendar
+    service = await db.fetchrow(
+        "SELECT id, slot_capacity, available_days::text AS available_days_text, sessions::text AS sessions_text FROM services WHERE id = $1", 
+        service_id
+    )
+    if not service:
+        raise HTTPException(404, "Service not found")
+        
+    available_days = json.loads(service['available_days_text']) if service['available_days_text'] else [0,1,2,3,4,5,6]
+    sessions = json.loads(service['sessions_text']) if service['sessions_text'] else ["Morning", "Evening"]
+    total_sessions = len(sessions) if sessions else 1
+    
+    _, num_days = calendar.monthrange(year, month)
+    start_date = datetime(year, month, 1).date()
+    end_date = datetime(year, month, num_days).date()
+    
+    blocks = await db.fetch(
+        "SELECT date, status, blocked_service_ids FROM calendar_dates WHERE date >= $1 AND date <= $2",
+        start_date, end_date
+    )
+    block_map = {}
+    for b in blocks:
+        blocked_ids = [str(uid) for uid in (b['blocked_service_ids'] or [])]
+        if b['status'] == 'blocked' or (b['status'] == 'partial' and service_id in blocked_ids):
+            block_map[b['date']] = 'blocked'
+
+    slots = await db.fetch(
+        "SELECT date, session, total_capacity, confirmed_count, pending_count FROM slot_inventory WHERE service_id = $1 AND date >= $2 AND date <= $3",
+        service_id, start_date, end_date
+    )
+    date_slots = {}
+    for s in slots:
+        d = s['date']
+        if d not in date_slots:
+            date_slots[d] = []
+        date_slots[d].append(s)
+
+    weekday_map = {6: 0, 0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6}
+    result = {}
+    for day in range(1, num_days + 1):
+        cur_date = datetime(year, month, day).date()
+        date_str = cur_date.strftime("%Y-%m-%d")
+        
+        if cur_date in block_map:
+            result[date_str] = "blocked"
+            continue
+            
+        dow = weekday_map[cur_date.weekday()]
+        if dow not in available_days:
+            result[date_str] = "blocked"
+            continue
+
+        day_inventory = date_slots.get(cur_date, [])
+        full_sessions = 0
+        for sess in sessions:
+            inv = next((x for x in day_inventory if x['session'] == sess), None)
+            if inv:
+                avail = inv['total_capacity'] - (inv['confirmed_count'] + inv['pending_count'])
+                if avail <= 0:
+                    full_sessions += 1
+        
+        if full_sessions >= total_sessions and len(day_inventory) >= total_sessions:
+            result[date_str] = "booked"
+        else:
+            result[date_str] = "free"
+
+    return result
+
 @router.post("/hold", response_model=HoldResponse)
 async def hold_slot(req: HoldRequest, db: Connection = Depends(get_db)):
     """

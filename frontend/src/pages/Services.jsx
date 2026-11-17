@@ -104,7 +104,7 @@ export default function Services() {
           {loading ? (
             <div className="py-20 text-center text-temple-tan">Loading services...</div>
           ) : (
-            <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" layout>
+            <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" layout>
             {filtered.map((svc, i) => (
               <motion.div key={svc.id} layout
                 initial={{ opacity: 0, y: 24 }}

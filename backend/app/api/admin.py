@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
 from pydantic import BaseModel
 from typing import List, Optional
 from asyncpg import Connection
 from app.core.database import get_db
 from app.core.audit import log_audit, compute_diff
-from app.core.auth import get_current_admin, get_current_super_admin, require_permission, get_user_permissions, get_current_user
+from app.core.auth import get_current_admin, get_current_super_admin, require_permission, get_user_permissions, get_current_user, supabase_admin
 from app.services.email_service import send_email
 import json
 from datetime import datetime
@@ -309,8 +309,98 @@ async def delete_service(
 
 @router.get("/users")
 async def get_users(db: Connection = Depends(get_db), admin_id: str = Depends(require_permission('manage_users'))):
-    records = await db.fetch("SELECT id, full_name, email, phone, role, created_at FROM users ORDER BY created_at DESC")
+    records = await db.fetch("""
+        SELECT u.id, u.full_name, u.email, u.phone, u.role, u.is_active, u.created_at,
+               (a.email_confirmed_at IS NOT NULL) AS is_verified
+        FROM public.users u
+        LEFT JOIN auth.users a ON u.id = a.id
+        ORDER BY u.created_at DESC
+    """)
     return [dict(r) for r in records]
+
+@router.get("/users/check-email")
+async def check_email_availability(email: str, db: Connection = Depends(get_db)):
+    exists = await db.fetchval("SELECT 1 FROM users WHERE LOWER(email) = LOWER($1)", email.strip())
+    return {"available": not bool(exists), "exists": bool(exists)}
+
+class CreateUserRequest(BaseModel):
+    full_name: str
+    email: str
+    phone: Optional[str] = None
+    role: str
+    password: str
+
+@router.post("/users")
+async def create_user(
+    req: CreateUserRequest,
+    db: Connection = Depends(get_db),
+    admin_id: str = Depends(require_permission('manage_users'))
+):
+    role_exists = await db.fetchval("SELECT name FROM roles WHERE name = $1", req.role)
+    if not role_exists:
+        raise HTTPException(400, "Invalid role selected")
+
+    existing = await db.fetchval("SELECT id FROM users WHERE email = $1", req.email)
+    if existing:
+        raise HTTPException(400, "User with this email already exists")
+
+    try:
+        res = supabase_admin.auth.admin.create_user({
+            "email": req.email,
+            "password": req.password,
+            "email_confirm": True,
+            "user_metadata": {"full_name": req.full_name, "phone": req.phone or ""},
+            "phone": req.phone if req.phone else None
+        })
+        if not res or not res.user:
+            raise HTTPException(400, "Failed to create user in auth system")
+        
+        user_id = res.user.id
+        await db.execute(
+            """
+            INSERT INTO users (id, full_name, email, phone, role, is_active)
+            VALUES ($1, $2, $3, $4, $5, true)
+            ON CONFLICT (id) DO UPDATE SET role = $5, full_name = $2, phone = $4, is_active = true
+            """,
+            user_id, req.full_name, req.email, req.phone, req.role
+        )
+        await log_audit(db, admin_id, "CREATE_USER", "user", str(user_id), {"email": req.email, "role": req.role, "full_name": req.full_name})
+        return {"status": "success", "user_id": str(user_id)}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(400, detail=str(e))
+
+class UpdateUserStatusRequest(BaseModel):
+    is_active: bool
+
+@router.put("/users/{user_id}/status")
+async def update_user_status(
+    user_id: str,
+    req: UpdateUserStatusRequest,
+    db: Connection = Depends(get_db),
+    admin_id: str = Depends(require_permission('manage_users'))
+):
+    user = await db.fetchrow("SELECT id, role, is_active FROM users WHERE id = $1", user_id)
+    if not user:
+        raise HTTPException(404, "User not found")
+        
+    if str(user['id']) == str(admin_id) and not req.is_active:
+        raise HTTPException(400, "You cannot disable your own account")
+        
+    if user['role'] == 'super_admin' and not req.is_active:
+        raise HTTPException(400, "Cannot disable super admin account")
+
+    await db.execute("UPDATE users SET is_active = $1 WHERE id = $2", req.is_active, user_id)
+    
+    try:
+        ban_duration = "876000h" if not req.is_active else "0s"
+        supabase_admin.auth.admin.update_user_by_id(user_id, {"ban_duration": ban_duration})
+    except Exception:
+        pass
+
+    await log_audit(db, admin_id, "UPDATE_USER_STATUS", "user", user_id, {"is_active": req.is_active})
+    return {"status": "success"}
 
 class UpdateRoleRequest(BaseModel):
     role: str
@@ -329,6 +419,45 @@ async def update_user_role(
     await db.execute("UPDATE users SET role = $1 WHERE id = $2", update.role, user_id)
     return {"status": "success"}
 
+@router.delete("/users/{user_id}")
+async def delete_user(
+    user_id: str,
+    db: Connection = Depends(get_db),
+    admin_id: str = Depends(require_permission('manage_users'))
+):
+    user = await db.fetchrow("SELECT id, role, email FROM users WHERE id = $1", user_id)
+    if not user:
+        raise HTTPException(404, "User not found")
+        
+    if user['role'] != 'devotee':
+        raise HTTPException(400, "Only devotee accounts can be deleted. For staff/admin, disable their account or change their role.")
+        
+    booking_count = await db.fetchval("SELECT COUNT(*) FROM bookings WHERE user_id = $1", user_id)
+    donation_count = await db.fetchval("SELECT COUNT(*) FROM e_undiyal_transactions WHERE user_id = $1", user_id)
+    
+    if booking_count > 0 or donation_count > 0:
+        await db.execute("""
+            UPDATE users 
+            SET is_active = false,
+                full_name = 'Deleted Devotee',
+                email = 'deleted_' || id || '@deleted.local',
+                phone = NULL
+            WHERE id = $1
+        """, user_id)
+        try:
+            supabase_admin.auth.admin.delete_user(user_id)
+        except Exception:
+            pass
+    else:
+        try:
+            supabase_admin.auth.admin.delete_user(user_id)
+        except Exception:
+            pass
+        await db.execute("DELETE FROM users WHERE id = $1", user_id)
+        
+    await log_audit(db, admin_id, "DELETE_DEVOTEE", "user", user_id, {"email": user['email']})
+    return {"status": "success"}
+
 # --- ROLES MANAGEMENT ---
 @router.get("/roles")
 async def get_roles(db: Connection = Depends(get_db), admin_id: str = Depends(require_permission('manage_roles'))):
@@ -343,11 +472,12 @@ class RoleCreateUpdate(BaseModel):
 @router.post("/roles")
 async def create_role(req: RoleCreateUpdate, db: Connection = Depends(get_db), admin_id: str = Depends(require_permission('manage_roles'))):
     import json
+    formatted = req.name.strip().lower().replace(" ", "_")
     try:
-        await db.execute("INSERT INTO roles (name, permissions) VALUES ($1, $2)", req.name, json.dumps(req.permissions))
+        await db.execute("INSERT INTO roles (name, permissions) VALUES ($1, $2)", formatted, json.dumps(req.permissions))
     except Exception:
         raise HTTPException(status_code=400, detail="Role already exists")
-    await log_audit(db, admin_id, "CREATE_ROLE", "role", req.name, req.model_dump(mode="json"))
+    await log_audit(db, admin_id, "CREATE_ROLE", "role", formatted, req.model_dump(mode="json"))
     return {"status": "success"}
 
 @router.put("/roles/{role_name}")
@@ -361,6 +491,133 @@ async def update_role(role_name: str, req: RoleCreateUpdate, db: Connection = De
     diff = compute_diff({"permissions": old_perms}, {"permissions": req.permissions})
     if diff:
         await log_audit(db, admin_id, "UPDATE_ROLE", "role", role_name, diff)
+    return {"status": "success"}
+
+class RenameRoleRequest(BaseModel):
+    new_name: str
+
+@router.put("/roles/{role_name}/rename")
+async def rename_role(
+    role_name: str,
+    req: RenameRoleRequest,
+    db: Connection = Depends(get_db),
+    admin_id: str = Depends(require_permission('manage_roles'))
+):
+    protected = ['super_admin', 'admin', 'devotee', 'staff']
+    if role_name in protected:
+        raise HTTPException(400, f"Cannot rename protected system role '{role_name}'")
+        
+    new_formatted = req.new_name.strip().lower().replace(" ", "_")
+    if not new_formatted:
+        raise HTTPException(400, "Role name cannot be empty")
+        
+    if new_formatted in protected:
+        raise HTTPException(400, "Cannot rename to a protected system role name")
+        
+    exists = await db.fetchval("SELECT name FROM roles WHERE name = $1", new_formatted)
+    if exists:
+        raise HTTPException(400, f"Role '{new_formatted}' already exists")
+        
+    async with db.transaction():
+        perms = await db.fetchval("SELECT permissions FROM roles WHERE name = $1", role_name)
+        if not perms:
+            raise HTTPException(404, "Role not found")
+            
+        await db.execute("INSERT INTO roles (name, permissions) VALUES ($1, $2)", new_formatted, perms)
+        await db.execute("UPDATE users SET role = $1 WHERE role = $2", new_formatted, role_name)
+        await db.execute("DELETE FROM roles WHERE name = $1", role_name)
+        
+    await log_audit(db, admin_id, "RENAME_ROLE", "role", role_name, {"old_name": role_name, "new_name": new_formatted})
+    return {"status": "success", "name": new_formatted}
+
+@router.delete("/roles/{role_name}")
+async def delete_role(
+    role_name: str,
+    db: Connection = Depends(get_db),
+    admin_id: str = Depends(require_permission('manage_roles'))
+):
+    protected = ['super_admin', 'admin', 'devotee', 'staff']
+    if role_name in protected:
+        raise HTTPException(400, f"Cannot delete protected system role '{role_name}'")
+        
+    count = await db.fetchval("SELECT COUNT(*) FROM users WHERE role = $1", role_name)
+    if count > 0:
+        raise HTTPException(400, f"Cannot delete role '{role_name}' because {count} user(s) currently have this role. Please reassign them first.")
+        
+    await db.execute("DELETE FROM roles WHERE name = $1", role_name)
+    await log_audit(db, admin_id, "DELETE_ROLE", "role", role_name, {})
+    return {"status": "success"}
+
+# --- SERVICE SUB MENU (CATEGORIES) MANAGEMENT ---
+class ServiceCategoryCreateUpdate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    sort_order: Optional[int] = 0
+
+@router.get("/service-categories")
+async def get_service_categories(db: Connection = Depends(get_db)):
+    rows = await db.fetch("SELECT * FROM service_categories ORDER BY sort_order ASC, name ASC")
+    return [dict(r) for r in rows]
+
+@router.post("/service-categories")
+async def create_service_category(
+    req: ServiceCategoryCreateUpdate,
+    db: Connection = Depends(get_db),
+    admin_id: str = Depends(require_permission('manage_services'))
+):
+    slug = req.name.strip().lower().replace(" ", "_")
+    try:
+        cat_id = await db.fetchval("""
+            INSERT INTO service_categories (name, slug, description, sort_order)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id
+        """, req.name.strip(), slug, req.description, req.sort_order or 0)
+    except Exception:
+        raise HTTPException(400, "Category already exists")
+        
+    await log_audit(db, admin_id, "CREATE_CATEGORY", "service_category", str(cat_id), req.model_dump())
+    return {"status": "success", "id": str(cat_id)}
+
+@router.put("/service-categories/{category_id}")
+async def update_service_category(
+    category_id: str,
+    req: ServiceCategoryCreateUpdate,
+    db: Connection = Depends(get_db),
+    admin_id: str = Depends(require_permission('manage_services'))
+):
+    slug = req.name.strip().lower().replace(" ", "_")
+    old_name = await db.fetchval("SELECT name FROM service_categories WHERE id = $1", category_id)
+    if not old_name:
+        raise HTTPException(404, "Category not found")
+        
+    await db.execute("""
+        UPDATE service_categories 
+        SET name = $1, slug = $2, description = $3, sort_order = $4
+        WHERE id = $5
+    """, req.name.strip(), slug, req.description, req.sort_order or 0, category_id)
+    
+    if old_name != req.name.strip():
+        await db.execute("UPDATE services SET category = $1 WHERE category = $2", req.name.strip(), old_name)
+        
+    await log_audit(db, admin_id, "UPDATE_CATEGORY", "service_category", category_id, req.model_dump())
+    return {"status": "success"}
+
+@router.delete("/service-categories/{category_id}")
+async def delete_service_category(
+    category_id: str,
+    db: Connection = Depends(get_db),
+    admin_id: str = Depends(require_permission('manage_services'))
+):
+    cat = await db.fetchrow("SELECT name FROM service_categories WHERE id = $1", category_id)
+    if not cat:
+        raise HTTPException(404, "Category not found")
+        
+    count = await db.fetchval("SELECT COUNT(*) FROM services WHERE category ILIKE $1", cat['name'])
+    if count > 0:
+        raise HTTPException(400, f"Cannot delete category '{cat['name']}' because {count} service(s) belong to it. Reassign or update those services first.")
+        
+    await db.execute("DELETE FROM service_categories WHERE id = $1", category_id)
+    await log_audit(db, admin_id, "DELETE_CATEGORY", "service_category", category_id, {})
     return {"status": "success"}
 
 # --- NOTICES MANAGEMENT ---
@@ -548,13 +805,54 @@ async def update_donation_status(
 
 # --- AUDIT LOGS ---
 @router.get("/audit-logs")
-async def get_audit_logs(db: Connection = Depends(get_db), admin_id: str = Depends(require_permission('manage_roles'))):
-    logs = await db.fetch("""
-        SELECT * FROM audit_logs 
-        ORDER BY created_at DESC 
-        LIMIT 500
-    """)
-    # Convert dates to ISO format
+async def get_audit_logs(
+    db: Connection = Depends(get_db), 
+    admin_id: str = Depends(require_permission('manage_roles')),
+    page: int = 1,
+    page_size: int = 20,
+    search: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    category: Optional[str] = None
+):
+    query = "SELECT * FROM audit_logs WHERE 1=1"
+    count_query = "SELECT COUNT(*) FROM audit_logs WHERE 1=1"
+    args = []
+    idx = 1
+    
+    if search:
+        query += f" AND (user_name ILIKE ${idx} OR user_role ILIKE ${idx} OR action_type ILIKE ${idx} OR entity_type ILIKE ${idx} OR details::text ILIKE ${idx})"
+        count_query += f" AND (user_name ILIKE ${idx} OR user_role ILIKE ${idx} OR action_type ILIKE ${idx} OR entity_type ILIKE ${idx} OR details::text ILIKE ${idx})"
+        args.append(f"%{search}%")
+        idx += 1
+        
+    if start_date:
+        query += f" AND created_at >= ${idx}::timestamptz"
+        count_query += f" AND created_at >= ${idx}::timestamptz"
+        args.append(f"{start_date} 00:00:00+05:30")
+        idx += 1
+        
+    if end_date:
+        query += f" AND created_at <= ${idx}::timestamptz"
+        count_query += f" AND created_at <= ${idx}::timestamptz"
+        args.append(f"{end_date} 23:59:59+05:30")
+        idx += 1
+        
+    if category == 'devotee':
+        query += f" AND (user_role = 'devotee' OR action_type IN ('PAGE_VISIT', 'LOGIN', 'LOGOUT'))"
+        count_query += f" AND (user_role = 'devotee' OR action_type IN ('PAGE_VISIT', 'LOGIN', 'LOGOUT'))"
+    elif category == 'admin':
+        query += f" AND (user_role != 'devotee' AND action_type NOT IN ('PAGE_VISIT', 'LOGIN', 'LOGOUT'))"
+        count_query += f" AND (user_role != 'devotee' AND action_type NOT IN ('PAGE_VISIT', 'LOGIN', 'LOGOUT'))"
+        
+    total = await db.fetchval(count_query, *args)
+    
+    offset = (max(1, page) - 1) * page_size
+    query += f" ORDER BY created_at DESC LIMIT ${idx} OFFSET ${idx+1}"
+    args.extend([page_size, offset])
+    
+    logs = await db.fetch(query, *args)
+    
     result = []
     for l in logs:
         d = dict(l)
@@ -570,7 +868,47 @@ async def get_audit_logs(db: Connection = Depends(get_db), admin_id: str = Depen
             except:
                 pass
         result.append(d)
-    return result
+        
+    return {
+        "total": total or 0,
+        "page": page,
+        "page_size": page_size,
+        "logs": result
+    }
+
+class ActivityLogRequest(BaseModel):
+    action_type: str  # 'PAGE_VISIT', 'LOGIN', 'LOGOUT'
+    page_url: Optional[str] = None
+    user_id: Optional[str] = None
+    user_name: Optional[str] = None
+    user_role: Optional[str] = None
+    details: Optional[dict] = None
+
+@router.post("/audit-logs/activity")
+async def record_activity(req: ActivityLogRequest, request: Request, db: Connection = Depends(get_db)):
+    client_ip = request.client.host if request.client else None
+    user_role = req.user_role or "devotee"
+    user_name = req.user_name
+    user_id = req.user_id
+    
+    if user_id:
+        try:
+            user_row = await db.fetchrow("SELECT full_name, role FROM users WHERE id = $1", user_id)
+            if user_row:
+                user_name = user_row['full_name'] or user_name
+                user_role = user_row['role'] or user_role
+        except Exception:
+            pass
+
+    details = req.details or {}
+    if req.page_url:
+        details['page'] = req.page_url
+        
+    await db.execute("""
+        INSERT INTO audit_logs (user_id, user_name, user_role, action_type, entity_type, entity_id, details, ip_address)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    """, user_id, user_name or 'Devotee / Visitor', user_role, req.action_type, 'devotee_activity', req.page_url, json.dumps(details), client_ip)
+    return {"status": "success"}
 
 class ClientActionLog(BaseModel):
     action_type: str
